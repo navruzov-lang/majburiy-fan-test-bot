@@ -1,0 +1,102 @@
+[
+  {
+    "savol": "Amir Temur qaysi asrda yashagan?",
+    "variantlar": ["XIII", "XIV", "XVI", "XVIII"],
+    "javob": 1
+  },
+  {
+    "savol": "O‘zbekiston mustaqilligi qachon e’lon qilingan?",
+    "variantlar": ["1990", "1991", "1992", "1993"],
+    "javob": 1
+  },
+  {
+    "savol": "O‘zbekiston Konstitutsiyasi qachon qabul qilingan?",
+    "variantlar": ["1990", "1991", "1992", "1993"],
+    "javob": 2
+  },
+  {
+    "savol": "Amir Temur davlat poytaxti qaysi shahar bo‘lgan?",
+    "variantlar": ["Buxoro", "Samarqand", "Xiva", "Toshkent"],
+    "javob": 1
+  },
+  {
+    "savol": "Jaloliddin Manguberdi qaysi davlat hukmdori bo‘lgan?",
+    "variantlar": ["Temuriylar", "Xorazmshohlar", "Somoniylar", "Shayboniylar"],
+    "javob": 1
+  },
+  {
+    "savol": "O‘zbekiston davlat bayrog‘i qachon qabul qilingan?",
+    "variantlar": ["1991-yil 18-noyabr", "1992-yil 8-dekabr", "1991-yil 1-sentabr", "1993-yil 2-iyul"],
+    "javob": 0
+  },
+  {
+    "savol": "Somoniylar davlati qaysi asrlarda hukm surgan?",
+    "variantlar": ["IX-X", "X-XI", "VIII-IX", "XI-XII"],
+    "javob": 0
+  },
+  {
+    "savol": "Buyuk Ipak yo‘li nima uchun mashhur?",
+    "variantlar": ["Harbiy yo‘l", "Savdo yo‘li", "Diniy yo‘l", "Sayohat yo‘li"],
+    "javob": 1
+  },
+  {
+    "savol": "Shayboniylar sulolasi asoschisi kim?",
+    "variantlar": ["Muhammad Shayboniyxon", "Amir Temur", "Ulug‘bek", "Jaloliddin"],
+    "javob": 0
+  },
+  {
+    "savol": "Mirzo Ulug‘bek qaysi sohada mashhur bo‘lgan?",
+    "variantlar": ["Harbiy", "Adabiyot", "Astronomiya", "Savdo"],
+    "javob": 2
+  },
+  {
+    "savol": "O‘zbekiston gerbi qachon qabul qilingan?",
+    "variantlar": ["1991", "1992", "1993", "1994"],
+    "javob": 1
+  },
+  {
+    "savol": "Xorazmshohlar davlatining poytaxti qaysi shahar bo‘lgan?",
+    "variantlar": ["Urganch", "Buxoro", "Samarqand", "Xiva"],
+    "javob": 0
+  },
+  {
+    "savol": "Temuriylar davrida ilm-fan qaysi shaharda rivojlangan?",
+    "variantlar": ["Samarqand", "Toshkent", "Buxoro", "Xiva"],
+    "javob": 0
+  },
+  {
+    "savol": "Jadidchilik harakati qaysi asr oxirida boshlangan?",
+    "variantlar": ["XVIII", "XIX", "XX", "XVII"],
+    "javob": 1
+  },
+  {
+    "savol": "O‘zbekiston Respublikasi qachon BMTga a’zo bo‘lgan?",
+    "variantlar": ["1991", "1992", "1993", "1994"],
+    "javob": 1
+  },
+  {
+    "savol": "Ulug‘bek rasadxonasi qaysi shaharda joylashgan?",
+    "variantlar": ["Samarqand", "Buxoro", "Xiva", "Toshkent"],
+    "javob": 0
+  },
+  {
+    "savol": "Samarqand qaysi sulola davrida poytaxt bo‘lgan?",
+    "variantlar": ["Somoniylar", "Temuriylar", "Shayboniylar", "Xorazmshohlar"],
+    "javob": 1
+  },
+  {
+    "savol": "O‘zbekiston Respublikasi Prezidentlik boshqaruv shakliga ega. Bu qachon mustahkamlangan?",
+    "variantlar": ["1990", "1991", "1992", "1993"],
+    "javob": 1
+  },
+  {
+    "savol": "Buyuk Ipak yo‘li qaysi materiklarni bog‘lagan?",
+    "variantlar": ["Yevropa va Osiyo", "Osiyo va Afrika", "Afrika va Amerika", "Yevropa va Amerika"],
+    "javob": 0
+  },
+  {
+    "savol": "Amir Temurning mashhur asari qanday nomlanadi?",
+    "variantlar": ["Temur tuzuklari", "Zafarnoma", "Boburnoma", "Devoni lug‘otit turk"],
+    "javob": 0
+  }
+]
