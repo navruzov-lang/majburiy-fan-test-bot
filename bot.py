@@ -30,6 +30,26 @@ questions = {
         {"savol": "12 ÷ 3 = ?", "variantlar": ["2", "3", "4", "5"], "javob": 2},
         {"savol": "5² = ?", "variantlar": ["10", "15", "20", "25"], "javob": 3},
     ],
+
+    "📖 Ona tili": [
+        {"savol": "'Kitob' so‘zi qaysi turkum?", 
+         "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"], 
+         "javob": 1},
+
+        {"savol": "'Chiroyli' so‘zi qaysi turkum?", 
+         "variantlar": ["Fe’l", "Ot", "Sifat", "Olmosh"], 
+         "javob": 2},
+    ],
+
+    "🏛 O‘zbekiston tarixi": [
+        {"savol": "Amir Temur qaysi asrda yashagan?", 
+         "variantlar": ["XIII asr", "XIV asr", "XVI asr", "XVIII asr"], 
+         "javob": 1},
+
+        {"savol": "Mustaqillik yili?", 
+         "variantlar": ["1989", "1990", "1991", "1992"], 
+         "javob": 2},
+    ],
 }
 
 TOTAL_QUESTIONS = 5  # keyin 20 qilamiz
@@ -133,9 +153,21 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["current"] += 1
 
-    # Keyingi savolni 1 sekunddan keyin yuboramiz
-    await query.message.reply_text("➡ Keyingi savol...")
-    await send_question(query, context)
+    # Agar oxirgi savol bo‘lsa — natija chiqaramiz
+    if context.user_data["current"] >= len(question_list):
+        score = context.user_data["score"]
+        total = len(question_list)
+
+        await query.message.reply_text(
+            f"🏁 Test tugadi!\n\n"
+            f"✅ To‘g‘ri: {score}\n"
+            f"❌ Noto‘g‘ri: {total - score}\n"
+            f"📊 Ball: {score}/{total}"
+        )
+
+        context.user_data.clear()
+    else:
+        await send_question(query, context)
 
 
 # ===== APP =====
