@@ -135,10 +135,16 @@ async def send_question(update, context):
 
     markup = InlineKeyboardMarkup(buttons)
 
-    await update.message.reply_text(
-        f"{index+1}. {q['savol']}",
-        reply_markup=markup
-    )
+    if hasattr(update, "callback_query") and update.callback_query:
+        await update.callback_query.message.reply_text(
+            f"{index+1}. {q['savol']}",
+            reply_markup=markup
+        )
+    else:
+        await update.message.reply_text(
+            f"{index+1}. {q['savol']}",
+            reply_markup=markup
+        )
 
 # ================= JAVOB =================
 
@@ -148,9 +154,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     selected = int(query.data.split("_")[1])
     correct = context.user_data["correct_index"]
-    variants = context.user_data["variants"]
-    index = context.user_data["current"]
-    q = context.user_data["question_list"][index]
 
     if selected == correct:
         context.user_data["score"] += 1
@@ -172,31 +175,21 @@ async def finish_test(update, context):
     subject = context.user_data["subject"]
 
     cursor.execute(
-        "SELECT best_score, total_tests FROM users WHERE user_id=? AND subject=?",
-        (user.id, subject),
+        "INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?)",
+        (user.id, user.username, subject, score, 1),
     )
-    row = cursor.fetchone()
 
-    if row:
-        best_score = max(score, row[0])
-        total_tests = row[1] + 1
-        cursor.execute(
-            "UPDATE users SET best_score=?, total_tests=? WHERE user_id=? AND subject=?",
-            (best_score, total_tests, user.id, subject),
-        )
-    else:
-        cursor.execute(
-            "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
-            (user.id, user.username, subject, score, 1),
-        )
+    cursor.execute(
+        "UPDATE users SET 
+            best_score = CASE WHEN best_score < ? THEN ? ELSE best_score END,
+            total_tests = total_tests + 1
+         WHERE user_id=? AND subject=?",
+        (score, score, user.id, subject),
+    )
 
     conn.commit()
 
-    text = (
-        f"🏁 Test tugadi!\n\n"
-        f"Fan: {subject}\n"
-        f"Ball: {score}/{len(context.user_data['question_list'])}"
-    )
+    text = f"🏁 Test tugadi!\n\nBall: {score}/{len(context.user_data['question_list'])}"
 
     buttons = [
         [InlineKeyboardButton("🔁 Qayta topshirish", callback_data="retry")],
