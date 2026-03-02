@@ -209,4 +209,7 @@ app.add_handler(CallbackQueryHandler(handle_menu, pattern="^(retry|menu)$"))
 app.add_handler(CallbackQueryHandler(handle_answer, pattern="^answer_"))
 
 print("Bot ishga tushdi 🚀")
-app.run_polling()
+app.run_polling(
+    allowed_updates=Update.ALL_TYPES,
+    close_loop=False,
+)
