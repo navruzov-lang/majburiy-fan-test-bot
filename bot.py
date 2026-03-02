@@ -130,21 +130,20 @@ async def send_question(update, context):
     context.user_data["correct_index"] = variants.index(correct_text)
     context.user_data["variants"] = variants
 
-    buttons = [[InlineKeyboardButton(v, callback_data=f"answer_{i}")]
-               for i, v in enumerate(variants)]
+    buttons = [
+        [InlineKeyboardButton(v, callback_data=f"answer_{i}")]
+        for i, v in enumerate(variants)
+    ]
 
     markup = InlineKeyboardMarkup(buttons)
 
-    if hasattr(update, "callback_query") and update.callback_query:
-        await update.callback_query.message.reply_text(
-            f"{index+1}. {q['savol']}",
-            reply_markup=markup
-        )
+    text = f"{index+1}. {q['savol']}"
+
+    # 🔥 MUHIM QISM
+    if update.callback_query:
+        await update.callback_query.message.reply_text(text, reply_markup=markup)
     else:
-        await update.message.reply_text(
-            f"{index+1}. {q['savol']}",
-            reply_markup=markup
-        )
+        await update.message.reply_text(text, reply_markup=markup)
 
 # ================= JAVOB =================
 
