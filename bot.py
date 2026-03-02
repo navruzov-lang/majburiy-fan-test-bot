@@ -13,27 +13,25 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Savollar bazasi (MVP uchun)
 questions = {
     "📐 Matematika": {
         "savol": "2 + 3 = ?",
-        "variantlar": ["A) 4", "B) 5", "C) 6"],
+        "variantlar": ["4", "5", "6", "7"],
         "javob": "B",
     },
     "📖 Ona tili": {
         "savol": "‘Kitob’ so‘zi qaysi turkumga kiradi?",
-        "variantlar": ["A) Fe’l", "B) Ot", "C) Sifat"],
+        "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"],
         "javob": "B",
     },
     "🏛 O'zbekiston tarixi": {
         "savol": "Amir Temur qaysi asrda yashagan?",
-        "variantlar": ["A) XIV asr", "B) XVI asr", "C) XVIII asr"],
-        "javob": "A",
+        "variantlar": ["XIII asr", "XIV asr", "XVI asr", "XVIII asr"],
+        "javob": "B",
     },
 }
 
 
-# /start komandasi
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["📐 Matematika"],
@@ -48,7 +46,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# Fan tanlash
 async def handle_fan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     fan = update.message.text
 
@@ -56,24 +53,30 @@ async def handle_fan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         savol = questions[fan]
 
         text = savol["savol"] + "\n\n"
-        for v in savol["variantlar"]:
-            text += v + "\n"
+        harflar = ["A", "B", "C", "D"]
+
+        for i, v in enumerate(savol["variantlar"]):
+            text += f"{harflar[i]}) {v}\n"
 
         context.user_data["correct"] = savol["javob"]
 
-        await update.message.reply_text(text)
+        keyboard = [["A", "B"], ["C", "D"]]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+        await update.message.reply_text(text, reply_markup=reply_markup)
 
 
-# Javob tekshirish
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_answer = update.message.text
     correct = context.user_data.get("correct")
 
     if correct:
-        if user_answer.startswith(correct):
+        if user_answer == correct:
             await update.message.reply_text("✅ To‘g‘ri!")
         else:
-            await update.message.reply_text("❌ Noto‘g‘ri!")
+            await update.message.reply_text(f"❌ Noto‘g‘ri! To‘g‘ri javob: {correct}")
+
+        context.user_data["correct"] = None
 
 
 app = ApplicationBuilder().token(TOKEN).build()
@@ -85,7 +88,6 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_answer))
 print("Test Bot ishga tushdi 🚀")
 
 
-# Render uchun kichik web server
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -99,9 +101,6 @@ def run_web():
     server.serve_forever()
 
 
-threading.Thread(target=run_web).start()
-
-app.run_polling()
 threading.Thread(target=run_web).start()
 
 app.run_polling()
