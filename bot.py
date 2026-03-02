@@ -2,11 +2,17 @@ import os
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
+    CallbackQueryHandler,
     ContextTypes,
     filters,
 )
@@ -17,17 +23,17 @@ questions = {
     "📐 Matematika": {
         "savol": "2 + 3 = ?",
         "variantlar": ["4", "5", "6", "7"],
-        "javob": "B",
+        "javob": 1,  # index (B = 1)
     },
     "📖 Ona tili": {
         "savol": "‘Kitob’ so‘zi qaysi turkumga kiradi?",
         "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"],
-        "javob": "B",
+        "javob": 1,
     },
     "🏛 O'zbekiston tarixi": {
         "savol": "Amir Temur qaysi asrda yashagan?",
         "variantlar": ["XIII asr", "XIV asr", "XVI asr", "XVIII asr"],
-        "javob": "B",
+        "javob": 1,
     },
 }
 
@@ -51,39 +57,41 @@ async def handle_fan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if fan in questions:
         savol = questions[fan]
-
-        text = savol["savol"] + "\n\n"
-        harflar = ["A", "B", "C", "D"]
-
-        for i, v in enumerate(savol["variantlar"]):
-            text += f"{harflar[i]}) {v}\n"
-
         context.user_data["correct"] = savol["javob"]
 
-        keyboard = [["A", "B"], ["C", "D"]]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        text = savol["savol"]
+
+        buttons = []
+        for i, v in enumerate(savol["variantlar"]):
+            buttons.append(
+                [InlineKeyboardButton(v, callback_data=str(i))]
+            )
+
+        reply_markup = InlineKeyboardMarkup(buttons)
 
         await update.message.reply_text(text, reply_markup=reply_markup)
 
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_answer = update.message.text
+    query = update.callback_query
+    await query.answer()
+
+    selected = int(query.data)
     correct = context.user_data.get("correct")
 
-    if correct:
-        if user_answer == correct:
-            await update.message.reply_text("✅ To‘g‘ri!")
-        else:
-            await update.message.reply_text(f"❌ Noto‘g‘ri! To‘g‘ri javob: {correct}")
+    if selected == correct:
+        result_text = "✅ To‘g‘ri javob!"
+    else:
+        result_text = "❌ Noto‘g‘ri javob!"
 
-        context.user_data["correct"] = None
+    await query.edit_message_text(result_text)
 
 
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_fan))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_answer))
+app.add_handler(CallbackQueryHandler(handle_answer))
 
 print("Test Bot ishga tushdi 🚀")
 
