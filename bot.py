@@ -20,22 +20,55 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
+TOTAL_QUESTIONS = 10
+
+# ================= SAVOLLAR =================
 
 questions = {
+
     "📐 Matematika": [
-        {"savol": "2 + 3 = ?", "variantlar": ["4", "5", "6", "7"], "javob": 1},
+        {"savol": "√49 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 1},
+        {"savol": "3² + 4² = ?", "variantlar": ["25", "49", "7", "5"], "javob": 0},
+        {"savol": "2x = 10. x = ?", "variantlar": ["2", "3", "5", "10"], "javob": 2},
+        {"savol": "15% of 200 = ?", "variantlar": ["20", "25", "30", "35"], "javob": 2},
+        {"savol": "7 × 8 = ?", "variantlar": ["54", "56", "58", "60"], "javob": 1},
+        {"savol": "144 ÷ 12 = ?", "variantlar": ["10", "11", "12", "13"], "javob": 2},
+        {"savol": "5³ = ?", "variantlar": ["15", "25", "75", "125"], "javob": 3},
+        {"savol": "1/2 + 1/4 = ?", "variantlar": ["1/6", "3/4", "3/2", "1/8"], "javob": 1},
+        {"savol": "x + 7 = 15. x = ?", "variantlar": ["6", "7", "8", "9"], "javob": 2},
+        {"savol": "Perimetri tomoni 5 sm kvadrat P = ?", "variantlar": ["10", "15", "20", "25"], "javob": 2},
         {"savol": "10 - 4 = ?", "variantlar": ["5", "6", "7", "8"], "javob": 1},
         {"savol": "3 × 3 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 3},
     ],
+
     "📖 Ona tili": [
         {"savol": "'Kitob' so‘zi qaysi turkum?",
-         "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"],
-         "javob": 1},
+         "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"], "javob": 1},
+        {"savol": "'Chiroyli' so‘zi qaysi turkum?",
+         "variantlar": ["Olmosh", "Sifat", "Ot", "Fe’l"], "javob": 1},
+        {"savol": "Ega qaysi gap bo‘lagi?",
+         "variantlar": ["Asosiy", "Ikkinchi darajali", "Hol", "Aniqlovchi"], "javob": 0},
+        {"savol": "'Yaxshi o‘qidi' qaysi zamon?",
+         "variantlar": ["Hozirgi", "O‘tgan", "Kelasi", "Shart"], "javob": 1},
+        {"savol": "Fe’l nimani bildiradi?",
+         "variantlar": ["Harakat", "Narsa", "Belgini", "Son"], "javob": 0},
+        {"savol": "Ot nimani bildiradi?",
+         "variantlar": ["Harakat", "Belgini", "Narsa", "Hol"], "javob": 2},
+    ],
+
+    "🏛 Oʻzbekiston tarixi": [
+        {"savol": "Amir Temur qaysi asrda yashagan?",
+         "variantlar": ["XIII", "XIV", "XVI", "XVIII"], "javob": 1},
+        {"savol": "Amir Temur tug‘ilgan yil?",
+         "variantlar": ["1336", "1320", "1340", "1350"], "javob": 0},
+        {"savol": "O‘zbekiston mustaqilligi qachon e’lon qilingan?",
+         "variantlar": ["1990", "1991", "1992", "1993"], "javob": 1},
+        {"savol": "Temuriylar poytaxti?",
+         "variantlar": ["Buxoro", "Samarqand", "Xiva", "Qo‘qon"], "javob": 1},
+        {"savol": "Jadidchilik qachon boshlangan?",
+         "variantlar": ["XIX asr oxiri", "XVIII", "XVII", "XXI"], "javob": 0},
     ],
 }
-
-TOTAL_QUESTIONS = 3
-
 
 # ================= START =================
 
@@ -45,6 +78,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["📐 Matematika"],
         ["📖 Ona tili"],
+        ["🏛 Oʻzbekiston tarixi"],
     ]
 
     await update.message.reply_text(
@@ -52,12 +86,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
     )
 
-
 # ================= FAN TANLASH =================
 
 async def choose_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
     subject = update.message.text
-
     if subject not in questions:
         return
 
@@ -77,18 +109,11 @@ async def choose_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await send_question(update, context)
 
-
 # ================= SAVOL =================
 
 async def send_question(update, context):
     index = context.user_data["current"]
-    q_list = context.user_data["question_list"]
-
-    if index >= len(q_list):
-        await finish_test(update, context)
-        return
-
-    q = q_list[index]
+    q = context.user_data["question_list"][index]
 
     variants = q["variantlar"].copy()
     correct_text = variants[q["javob"]]
@@ -97,10 +122,8 @@ async def send_question(update, context):
     context.user_data["correct_index"] = variants.index(correct_text)
     context.user_data["variants"] = variants
 
-    buttons = [
-        [InlineKeyboardButton(v, callback_data=f"answer_{i}")]
-        for i, v in enumerate(variants)
-    ]
+    buttons = [[InlineKeyboardButton(v, callback_data=f"answer_{i}")]
+               for i, v in enumerate(variants)]
 
     markup = InlineKeyboardMarkup(buttons)
 
@@ -108,7 +131,6 @@ async def send_question(update, context):
         f"{index+1}. {q['savol']}",
         reply_markup=markup
     )
-
 
 # ================= JAVOB =================
 
@@ -142,36 +164,9 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data["current"] >= len(context.user_data["question_list"]):
         await finish_test(update, context)
     else:
-        await send_next(query, context)
+        await send_question(query, context)
 
-
-async def send_next(query, context):
-    index = context.user_data["current"]
-    q_list = context.user_data["question_list"]
-
-    q = q_list[index]
-
-    variants = q["variantlar"].copy()
-    correct_text = variants[q["javob"]]
-    random.shuffle(variants)
-
-    context.user_data["correct_index"] = variants.index(correct_text)
-    context.user_data["variants"] = variants
-
-    buttons = [
-        [InlineKeyboardButton(v, callback_data=f"answer_{i}")]
-        for i, v in enumerate(variants)
-    ]
-
-    markup = InlineKeyboardMarkup(buttons)
-
-    await query.message.reply_text(
-        f"{index+1}. {q['savol']}",
-        reply_markup=markup
-    )
-
-
-# ================= TEST TUGASH =================
+# ================= TUGASH =================
 
 async def finish_test(update, context):
     score = context.user_data["score"]
@@ -182,7 +177,8 @@ async def finish_test(update, context):
         f"🏁 Test tugadi!\n\n"
         f"Fan: {subject}\n"
         f"To‘g‘ri: {score}\n"
-        f"Noto‘g‘ri: {total-score}"
+        f"Noto‘g‘ri: {total-score}\n"
+        f"Ball: {score}/{total}"
     )
 
     buttons = [
@@ -192,11 +188,7 @@ async def finish_test(update, context):
 
     markup = InlineKeyboardMarkup(buttons)
 
-    if update.callback_query:
-        await update.callback_query.message.reply_text(text, reply_markup=markup)
-    else:
-        await update.message.reply_text(text, reply_markup=markup)
-
+    await update.callback_query.message.reply_text(text, reply_markup=markup)
 
 # ================= MENU =================
 
@@ -215,26 +207,12 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             min(TOTAL_QUESTIONS, len(questions[subject]))
         )
         await query.message.reply_text(f"{subject} testi qayta boshlandi!")
-        await send_next(query, context)
+        await send_question(query, context)
 
     elif query.data == "menu":
-        context.user_data.clear()
-        await query.message.reply_text("Fan tanlang:")
         await start(query, context)
 
-
-# ================= APP =================
-
-app = ApplicationBuilder().token(TOKEN).build()
-
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, choose_subject))
-app.add_handler(CallbackQueryHandler(handle_menu, pattern="^(retry|menu)$"))
-app.add_handler(CallbackQueryHandler(handle_answer, pattern="^answer_"))
-
-print("Bot ishga tushdi 🚀")
-
-# ================= RENDER =================
+# ================= RENDER SERVER =================
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -249,4 +227,14 @@ def run_web():
 
 threading.Thread(target=run_web).start()
 
+# ================= APP =================
+
+app = ApplicationBuilder().token(TOKEN).build()
+
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, choose_subject))
+app.add_handler(CallbackQueryHandler(handle_menu, pattern="^(retry|menu)$"))
+app.add_handler(CallbackQueryHandler(handle_answer, pattern="^answer_"))
+
+print("Bot ishga tushdi 🚀")
 app.run_polling()
