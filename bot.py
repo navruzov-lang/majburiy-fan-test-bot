@@ -112,15 +112,26 @@ async def send_question(update, context):
         return
 
     q = question_list[index]
+
+    # Variantlarni random aralashtirish
+    variants = q["variantlar"].copy()
+    correct_text = variants[q["javob"]]
+
+    random.shuffle(variants)
+
+    # Yangi to‘g‘ri javob index
+    new_correct_index = variants.index(correct_text)
+
+    context.user_data["correct_index"] = new_correct_index
+
     text = f"{index + 1}. {q['savol']}"
 
     buttons = []
-    for i, variant in enumerate(q["variantlar"]):
+    for i, variant in enumerate(variants):
         buttons.append([InlineKeyboardButton(variant, callback_data=str(i))])
 
     reply_markup = InlineKeyboardMarkup(buttons)
 
-    # MUHIM QISM 👇
     if hasattr(update, "message") and update.message:
         await update.message.reply_text(text, reply_markup=reply_markup)
     else:
@@ -137,11 +148,15 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     index = context.user_data["current"]
     q = context.user_data["question_list"][index]
 
-    correct = q["javob"]
+    correct = context.user_data["correct_index"]  # 👈 MUHIM O‘ZGARISH
 
     new_text = f"{index + 1}. {q['savol']}\n\n"
 
-    for i, variant in enumerate(q["variantlar"]):
+    variants = q["variantlar"].copy()
+    correct_text = variants[q["javob"]]
+    random.shuffle(variants)
+
+    for i, variant in enumerate(variants):
         if i == correct:
             new_text += f"✅ {variant}\n"
         elif i == selected:
@@ -156,7 +171,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["current"] += 1
 
-    # Oxirgi savol bo‘lsa
     if context.user_data["current"] >= len(context.user_data["question_list"]):
         await finish_test(update, context)
     else:
