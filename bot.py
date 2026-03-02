@@ -1,6 +1,5 @@
 import os
 import random
-import sqlite3
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -21,60 +20,29 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
-TOTAL_QUESTIONS = 10
-
-# ================= DATABASE =================
-
-conn = sqlite3.connect("database.db", check_same_thread=False)
-cursor = conn.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER,
-    username TEXT,
-    subject TEXT,
-    best_score INTEGER,
-    total_tests INTEGER
-)
-""")
-conn.commit()
+TOTAL_QUESTIONS = 5   # hozir 5 qilib turamiz (stabil uchun)
 
 # ================= SAVOLLAR =================
 
 questions = {
     "📐 Matematika": [
-        {"savol": "√49 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 1},
-        {"savol": "3² + 4² = ?", "variantlar": ["25", "49", "7", "5"], "javob": 0},
-        {"savol": "2x = 10. x = ?", "variantlar": ["2", "3", "5", "10"], "javob": 2},
-        {"savol": "15% of 200 = ?", "variantlar": ["20", "25", "30", "35"], "javob": 2},
-        {"savol": "7 × 8 = ?", "variantlar": ["54", "56", "58", "60"], "javob": 1},
-        {"savol": "144 ÷ 12 = ?", "variantlar": ["10", "11", "12", "13"], "javob": 2},
-        {"savol": "5³ = ?", "variantlar": ["15", "25", "75", "125"], "javob": 3},
-        {"savol": "1/2 + 1/4 = ?", "variantlar": ["1/6", "3/4", "3/2", "1/8"], "javob": 1},
-        {"savol": "x + 7 = 15. x = ?", "variantlar": ["6", "7", "8", "9"], "javob": 2},
+        {"savol": "2 + 3 = ?", "variantlar": ["4", "5", "6", "7"], "javob": 1},
         {"savol": "10 - 4 = ?", "variantlar": ["5", "6", "7", "8"], "javob": 1},
+        {"savol": "3 × 3 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 3},
+        {"savol": "5² = ?", "variantlar": ["10", "15", "20", "25"], "javob": 3},
+        {"savol": "12 ÷ 3 = ?", "variantlar": ["2", "3", "4", "5"], "javob": 2},
     ],
-
     "📖 Ona tili": [
         {"savol": "'Kitob' so‘zi qaysi turkum?",
          "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"], "javob": 1},
         {"savol": "'Chiroyli' so‘zi qaysi turkum?",
          "variantlar": ["Olmosh", "Sifat", "Ot", "Fe’l"], "javob": 1},
-        {"savol": "Ega qaysi gap bo‘lagi?",
-         "variantlar": ["Asosiy", "Ikkinchi darajali", "Hol", "Aniqlovchi"], "javob": 0},
-        {"savol": "'Yaxshi o‘qidi' qaysi zamon?",
-         "variantlar": ["Hozirgi", "O‘tgan", "Kelasi", "Shart"], "javob": 1},
     ],
-
     "🏛 Oʻzbekiston tarixi": [
         {"savol": "Amir Temur qaysi asrda yashagan?",
          "variantlar": ["XIII", "XIV", "XVI", "XVIII"], "javob": 1},
-        {"savol": "Amir Temur tug‘ilgan yil?",
-         "variantlar": ["1336", "1320", "1340", "1350"], "javob": 0},
         {"savol": "O‘zbekiston mustaqilligi qachon e’lon qilingan?",
          "variantlar": ["1990", "1991", "1992", "1993"], "javob": 1},
-        {"savol": "Temuriylar poytaxti?",
-         "variantlar": ["Buxoro", "Samarqand", "Xiva", "Qo‘qon"], "javob": 1},
     ],
 }
 
@@ -98,6 +66,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def choose_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
     subject = update.message.text
+
     if subject not in questions:
         return
 
@@ -137,13 +106,17 @@ async def send_question(update, context):
 
     markup = InlineKeyboardMarkup(buttons)
 
-    text = f"{index+1}. {q['savol']}"
-
-    # 🔥 MUHIM QISM
-    if update.callback_query:
-        await update.callback_query.message.reply_text(text, reply_markup=markup)
+    # MUHIM: universal reply
+    if hasattr(update, "callback_query") and update.callback_query:
+        await update.callback_query.message.reply_text(
+            f"{index+1}. {q['savol']}",
+            reply_markup=markup
+        )
     else:
-        await update.message.reply_text(text, reply_markup=markup)
+        await update.message.reply_text(
+            f"{index+1}. {q['savol']}",
+            reply_markup=markup
+        )
 
 # ================= JAVOB =================
 
@@ -164,38 +137,25 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await send_question(update, context)
 
-# ================= TUGASH =================
+# ================= TEST TUGADI =================
 
 async def finish_test(update, context):
     query = update.callback_query
-    user = query.from_user
 
     score = context.user_data["score"]
-    subject = context.user_data["subject"]
+    total = len(context.user_data["question_list"])
 
-    cursor.execute(
-        "INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?)",
-        (user.id, user.username, subject, score, 1),
-    )
-
-    cursor.execute(
-        "UPDATE users SET 
-            best_score = CASE WHEN best_score < ? THEN ? ELSE best_score END,
-            total_tests = total_tests + 1
-         WHERE user_id=? AND subject=?",
-        (score, score, user.id, subject),
-    )
-
-    conn.commit()
-
-    text = f"🏁 Test tugadi!\n\nBall: {score}/{len(context.user_data['question_list'])}"
+    text = f"🏁 Test tugadi!\n\nBall: {score}/{total}"
 
     buttons = [
         [InlineKeyboardButton("🔁 Qayta topshirish", callback_data="retry")],
         [InlineKeyboardButton("🔙 Fanlar menyusi", callback_data="menu")]
     ]
 
-    await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.message.reply_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 # ================= MENU =================
 
@@ -205,6 +165,7 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "retry":
         subject = context.user_data["subject"]
+
         context.user_data.clear()
         context.user_data["subject"] = subject
         context.user_data["score"] = 0
@@ -213,33 +174,12 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             questions[subject],
             min(TOTAL_QUESTIONS, len(questions[subject]))
         )
+
         await query.message.reply_text(f"{subject} testi qayta boshlandi!")
         await send_question(update, context)
 
     elif query.data == "menu":
         await start(query, context)
-
-# ================= REYTING =================
-
-async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    subject = "📐 Matematika"
-
-    cursor.execute(
-        "SELECT username, best_score FROM users WHERE subject=? ORDER BY best_score DESC LIMIT 10",
-        (subject,),
-    )
-
-    rows = cursor.fetchall()
-
-    if not rows:
-        await update.message.reply_text("Hali reyting yo‘q.")
-        return
-
-    text = "🏆 Top 10 Reyting\n\n"
-    for i, row in enumerate(rows, start=1):
-        text += f"{i}. @{row[0]} — {row[1]} ball\n"
-
-    await update.message.reply_text(text)
 
 # ================= RENDER SERVER =================
 
@@ -261,7 +201,6 @@ threading.Thread(target=run_web).start()
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("reyting", leaderboard))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, choose_subject))
 app.add_handler(CallbackQueryHandler(handle_menu, pattern="^(retry|menu)$"))
 app.add_handler(CallbackQueryHandler(handle_answer, pattern="^answer_"))
