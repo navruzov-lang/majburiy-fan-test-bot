@@ -6,6 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
@@ -20,7 +21,7 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-# ===== SAVOLLAR =====
+# ================== SAVOLLAR ==================
 
 questions = {
     "📐 Matematika": [
@@ -52,62 +53,62 @@ questions = {
     ],
 }
 
-TOTAL_QUESTIONS = 5  # keyin 20 qilamiz
+TOTAL_QUESTIONS = 5
 
 
-# ===== START =====
+# ================== START ==================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
 
-    keyboard = [["📐 Matematika"]]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    keyboard = [
+        ["📐 Matematika"],
+        ["📖 Ona tili"],
+        ["🏛 O‘zbekiston tarixi"],
+    ]
 
     await update.message.reply_text(
         "📚 Majburiy Fan Test Bot\n\nFan tanlang:",
-        reply_markup=reply_markup,
+        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
     )
 
 
-# ===== FAN TANLASH =====
+# ================== FAN TANLASH ==================
 
-async def handle_fan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if context.user_data.get("in_test"):
-        return
-
+async def choose_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
     fan = update.message.text
 
-    if fan in questions:
-        context.user_data["in_test"] = True
-        context.user_data["score"] = 0
-        context.user_data["current"] = 0
+    if fan not in questions:
+        return
 
-        all_questions = questions[fan]
-        selected = random.sample(all_questions, min(TOTAL_QUESTIONS, len(all_questions)))
+    context.user_data.clear()
+    context.user_data["subject"] = fan
+    context.user_data["score"] = 0
+    context.user_data["current"] = 0
 
-        context.user_data["question_list"] = selected
+    selected_questions = random.sample(
+        questions[fan],
+        min(TOTAL_QUESTIONS, len(questions[fan]))
+    )
 
-        await send_question(update, context)
+    context.user_data["question_list"] = selected_questions
+
+    await update.message.reply_text(
+        f"📘 {fan} testi boshlandi!\n",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+    await send_question(update, context)
 
 
-# ===== SAVOL YUBORISH =====
+# ================== SAVOL YUBORISH ==================
 
 async def send_question(update, context):
     index = context.user_data["current"]
     question_list = context.user_data["question_list"]
 
     if index >= len(question_list):
-        score = context.user_data["score"]
-        total = len(question_list)
-
-        await update.message.reply_text(
-            f"🏁 Test tugadi!\n\n"
-            f"✅ To‘g‘ri: {score}\n"
-            f"❌ Noto‘g‘ri: {total - score}\n"
-            f"📊 Ball: {score}/{total}"
-        )
-
-        context.user_data.clear()
+        await finish_test(update, context)
         return
 
     q = question_list[index]
@@ -115,15 +116,18 @@ async def send_question(update, context):
     text = f"{index + 1}. {q['savol']}"
 
     buttons = []
-    for i, v in enumerate(q["variantlar"]):
-        buttons.append([InlineKeyboardButton(v, callback_data=str(i))])
+    for i, variant in enumerate(q["variantlar"]):
+        buttons.append([InlineKeyboardButton(variant, callback_data=str(i))])
 
     reply_markup = InlineKeyboardMarkup(buttons)
 
-    await update.message.reply_text(text, reply_markup=reply_markup)
+    if hasattr(update, "message"):
+        await update.message.reply_text(text, reply_markup=reply_markup)
+    else:
+        await update.callback_query.message.reply_text(text, reply_markup=reply_markup)
 
 
-# ===== JAVOB TEKSHIRISH =====
+# ================== JAVOB ==================
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -131,20 +135,19 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     selected = int(query.data)
     index = context.user_data["current"]
-    question_list = context.user_data["question_list"]
-    q = question_list[index]
+    q = context.user_data["question_list"][index]
 
     correct = q["javob"]
 
     new_text = f"{index + 1}. {q['savol']}\n\n"
 
-    for i, v in enumerate(q["variantlar"]):
+    for i, variant in enumerate(q["variantlar"]):
         if i == correct:
-            new_text += f"✅ {v}\n"
+            new_text += f"✅ {variant}\n"
         elif i == selected:
-            new_text += f"❌ {v}\n"
+            new_text += f"❌ {variant}\n"
         else:
-            new_text += f"{v}\n"
+            new_text += f"{variant}\n"
 
     if selected == correct:
         context.user_data["score"] += 1
@@ -153,35 +156,41 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["current"] += 1
 
-    # Agar oxirgi savol bo‘lsa — natija chiqaramiz
-    if context.user_data["current"] >= len(question_list):
-        score = context.user_data["score"]
-        total = len(question_list)
-
-        await query.message.reply_text(
-            f"🏁 Test tugadi!\n\n"
-            f"✅ To‘g‘ri: {score}\n"
-            f"❌ Noto‘g‘ri: {total - score}\n"
-            f"📊 Ball: {score}/{total}"
-        )
-
-        context.user_data.clear()
+    # Oxirgi savol bo‘lsa
+    if context.user_data["current"] >= len(context.user_data["question_list"]):
+        await finish_test(update, context)
     else:
-        await send_question(query, context)
+        await send_question(update, context)
 
 
-# ===== APP =====
+# ================== TEST TUGASH ==================
+
+async def finish_test(update, context):
+    score = context.user_data["score"]
+    total = len(context.user_data["question_list"])
+
+    await update.callback_query.message.reply_text(
+        f"🏁 Test tugadi!\n\n"
+        f"✅ To‘g‘ri: {score}\n"
+        f"❌ Noto‘g‘ri: {total - score}\n"
+        f"📊 Ball: {score}/{total}"
+    )
+
+    context.user_data.clear()
+
+
+# ================== APP ==================
 
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_fan))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, choose_subject))
 app.add_handler(CallbackQueryHandler(handle_answer))
 
-print("Test Bot ishga tushdi 🚀")
+print("Bot ishga tushdi 🚀")
 
 
-# ===== RENDER PORT SERVER =====
+# ================== RENDER PORT ==================
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
