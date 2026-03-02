@@ -1,4 +1,5 @@
 import os
+import json
 import random
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -20,31 +21,21 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
-TOTAL_QUESTIONS = 5   # hozir 5 qilib turamiz (stabil uchun)
+TOTAL_QUESTIONS = 10
 
-# ================= SAVOLLAR =================
+
+# ================= LOAD QUESTIONS =================
+
+def load_questions(filename):
+    with open(f"questions/{filename}", "r", encoding="utf-8") as f:
+        return json.load(f)
 
 questions = {
-    "📐 Matematika": [
-        {"savol": "2 + 3 = ?", "variantlar": ["4", "5", "6", "7"], "javob": 1},
-        {"savol": "10 - 4 = ?", "variantlar": ["5", "6", "7", "8"], "javob": 1},
-        {"savol": "3 × 3 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 3},
-        {"savol": "5² = ?", "variantlar": ["10", "15", "20", "25"], "javob": 3},
-        {"savol": "12 ÷ 3 = ?", "variantlar": ["2", "3", "4", "5"], "javob": 2},
-    ],
-    "📖 Ona tili": [
-        {"savol": "'Kitob' so‘zi qaysi turkum?",
-         "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"], "javob": 1},
-        {"savol": "'Chiroyli' so‘zi qaysi turkum?",
-         "variantlar": ["Olmosh", "Sifat", "Ot", "Fe’l"], "javob": 1},
-    ],
-    "🏛 Oʻzbekiston tarixi": [
-        {"savol": "Amir Temur qaysi asrda yashagan?",
-         "variantlar": ["XIII", "XIV", "XVI", "XVIII"], "javob": 1},
-        {"savol": "O‘zbekiston mustaqilligi qachon e’lon qilingan?",
-         "variantlar": ["1990", "1991", "1992", "1993"], "javob": 1},
-    ],
+    "📐 Matematika": load_questions("matematika.json"),
+    "📖 Ona tili": load_questions("ona_tili.json"),
+    "🏛 Oʻzbekiston tarixi": load_questions("tarix.json"),
 }
+
 
 # ================= START =================
 
@@ -61,6 +52,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📚 Fan tanlang:",
         reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
     )
+
 
 # ================= FAN TANLASH =================
 
@@ -86,6 +78,7 @@ async def choose_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await send_question(update, context)
 
+
 # ================= SAVOL =================
 
 async def send_question(update, context):
@@ -97,7 +90,6 @@ async def send_question(update, context):
     random.shuffle(variants)
 
     context.user_data["correct_index"] = variants.index(correct_text)
-    context.user_data["variants"] = variants
 
     buttons = [
         [InlineKeyboardButton(v, callback_data=f"answer_{i}")]
@@ -106,7 +98,6 @@ async def send_question(update, context):
 
     markup = InlineKeyboardMarkup(buttons)
 
-    # MUHIM: universal reply
     if hasattr(update, "callback_query") and update.callback_query:
         await update.callback_query.message.reply_text(
             f"{index+1}. {q['savol']}",
@@ -117,6 +108,7 @@ async def send_question(update, context):
             f"{index+1}. {q['savol']}",
             reply_markup=markup
         )
+
 
 # ================= JAVOB =================
 
@@ -137,6 +129,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await send_question(update, context)
 
+
 # ================= TEST TUGADI =================
 
 async def finish_test(update, context):
@@ -144,8 +137,15 @@ async def finish_test(update, context):
 
     score = context.user_data["score"]
     total = len(context.user_data["question_list"])
+    subject = context.user_data["subject"]
 
-    text = f"🏁 Test tugadi!\n\nBall: {score}/{total}"
+    text = (
+        f"🏁 Test tugadi!\n\n"
+        f"📘 Fan: {subject}\n"
+        f"✅ To‘g‘ri: {score}\n"
+        f"❌ Noto‘g‘ri: {total - score}\n"
+        f"📊 Ball: {score}/{total}"
+    )
 
     buttons = [
         [InlineKeyboardButton("🔁 Qayta topshirish", callback_data="retry")],
@@ -156,6 +156,7 @@ async def finish_test(update, context):
         text,
         reply_markup=InlineKeyboardMarkup(buttons)
     )
+
 
 # ================= MENU =================
 
@@ -181,6 +182,7 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "menu":
         await start(query, context)
 
+
 # ================= RENDER SERVER =================
 
 class Handler(BaseHTTPRequestHandler):
@@ -195,6 +197,7 @@ def run_web():
     server.serve_forever()
 
 threading.Thread(target=run_web).start()
+
 
 # ================= APP =================
 
