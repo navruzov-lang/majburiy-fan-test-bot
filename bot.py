@@ -1,5 +1,6 @@
 import os
 import random
+import sqlite3
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -22,10 +23,25 @@ from telegram.ext import (
 TOKEN = os.getenv("BOT_TOKEN")
 TOTAL_QUESTIONS = 10
 
+# ================= DATABASE =================
+
+conn = sqlite3.connect("database.db", check_same_thread=False)
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    user_id INTEGER,
+    username TEXT,
+    subject TEXT,
+    best_score INTEGER,
+    total_tests INTEGER
+)
+""")
+conn.commit()
+
 # ================= SAVOLLAR =================
 
 questions = {
-
     "📐 Matematika": [
         {"savol": "√49 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 1},
         {"savol": "3² + 4² = ?", "variantlar": ["25", "49", "7", "5"], "javob": 0},
@@ -36,9 +52,7 @@ questions = {
         {"savol": "5³ = ?", "variantlar": ["15", "25", "75", "125"], "javob": 3},
         {"savol": "1/2 + 1/4 = ?", "variantlar": ["1/6", "3/4", "3/2", "1/8"], "javob": 1},
         {"savol": "x + 7 = 15. x = ?", "variantlar": ["6", "7", "8", "9"], "javob": 2},
-        {"savol": "Perimetri tomoni 5 sm kvadrat P = ?", "variantlar": ["10", "15", "20", "25"], "javob": 2},
         {"savol": "10 - 4 = ?", "variantlar": ["5", "6", "7", "8"], "javob": 1},
-        {"savol": "3 × 3 = ?", "variantlar": ["6", "7", "8", "9"], "javob": 3},
     ],
 
     "📖 Ona tili": [
@@ -50,10 +64,6 @@ questions = {
          "variantlar": ["Asosiy", "Ikkinchi darajali", "Hol", "Aniqlovchi"], "javob": 0},
         {"savol": "'Yaxshi o‘qidi' qaysi zamon?",
          "variantlar": ["Hozirgi", "O‘tgan", "Kelasi", "Shart"], "javob": 1},
-        {"savol": "Fe’l nimani bildiradi?",
-         "variantlar": ["Harakat", "Narsa", "Belgini", "Son"], "javob": 0},
-        {"savol": "Ot nimani bildiradi?",
-         "variantlar": ["Harakat", "Belgini", "Narsa", "Hol"], "javob": 2},
     ],
 
     "🏛 Oʻzbekiston tarixi": [
@@ -65,8 +75,6 @@ questions = {
          "variantlar": ["1990", "1991", "1992", "1993"], "javob": 1},
         {"savol": "Temuriylar poytaxti?",
          "variantlar": ["Buxoro", "Samarqand", "Xiva", "Qo‘qon"], "javob": 1},
-        {"savol": "Jadidchilik qachon boshlangan?",
-         "variantlar": ["XIX asr oxiri", "XVIII", "XVII", "XXI"], "javob": 0},
     ],
 }
 
@@ -144,41 +152,50 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     index = context.user_data["current"]
     q = context.user_data["question_list"][index]
 
-    text = f"{index+1}. {q['savol']}\n\n"
-
-    for i, v in enumerate(variants):
-        if i == correct:
-            text += f"✅ {v}\n"
-        elif i == selected:
-            text += f"❌ {v}\n"
-        else:
-            text += f"{v}\n"
-
     if selected == correct:
         context.user_data["score"] += 1
-
-    await query.edit_message_text(text)
 
     context.user_data["current"] += 1
 
     if context.user_data["current"] >= len(context.user_data["question_list"]):
         await finish_test(update, context)
     else:
-        await send_question(query, context)
+        await send_question(update, context)
 
 # ================= TUGASH =================
 
 async def finish_test(update, context):
+    query = update.callback_query
+    user = query.from_user
+
     score = context.user_data["score"]
-    total = len(context.user_data["question_list"])
     subject = context.user_data["subject"]
+
+    cursor.execute(
+        "SELECT best_score, total_tests FROM users WHERE user_id=? AND subject=?",
+        (user.id, subject),
+    )
+    row = cursor.fetchone()
+
+    if row:
+        best_score = max(score, row[0])
+        total_tests = row[1] + 1
+        cursor.execute(
+            "UPDATE users SET best_score=?, total_tests=? WHERE user_id=? AND subject=?",
+            (best_score, total_tests, user.id, subject),
+        )
+    else:
+        cursor.execute(
+            "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
+            (user.id, user.username, subject, score, 1),
+        )
+
+    conn.commit()
 
     text = (
         f"🏁 Test tugadi!\n\n"
         f"Fan: {subject}\n"
-        f"To‘g‘ri: {score}\n"
-        f"Noto‘g‘ri: {total-score}\n"
-        f"Ball: {score}/{total}"
+        f"Ball: {score}/{len(context.user_data['question_list'])}"
     )
 
     buttons = [
@@ -186,9 +203,7 @@ async def finish_test(update, context):
         [InlineKeyboardButton("🔙 Fanlar menyusi", callback_data="menu")]
     ]
 
-    markup = InlineKeyboardMarkup(buttons)
-
-    await update.callback_query.message.reply_text(text, reply_markup=markup)
+    await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(buttons))
 
 # ================= MENU =================
 
@@ -207,10 +222,32 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             min(TOTAL_QUESTIONS, len(questions[subject]))
         )
         await query.message.reply_text(f"{subject} testi qayta boshlandi!")
-        await send_question(query, context)
+        await send_question(update, context)
 
     elif query.data == "menu":
         await start(query, context)
+
+# ================= REYTING =================
+
+async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    subject = "📐 Matematika"
+
+    cursor.execute(
+        "SELECT username, best_score FROM users WHERE subject=? ORDER BY best_score DESC LIMIT 10",
+        (subject,),
+    )
+
+    rows = cursor.fetchall()
+
+    if not rows:
+        await update.message.reply_text("Hali reyting yo‘q.")
+        return
+
+    text = "🏆 Top 10 Reyting\n\n"
+    for i, row in enumerate(rows, start=1):
+        text += f"{i}. @{row[0]} — {row[1]} ball\n"
+
+    await update.message.reply_text(text)
 
 # ================= RENDER SERVER =================
 
@@ -232,6 +269,7 @@ threading.Thread(target=run_web).start()
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("reyting", leaderboard))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, choose_subject))
 app.add_handler(CallbackQueryHandler(handle_menu, pattern="^(retry|menu)$"))
 app.add_handler(CallbackQueryHandler(handle_answer, pattern="^answer_"))
