@@ -23,7 +23,7 @@ questions = {
     "📐 Matematika": {
         "savol": "2 + 3 = ?",
         "variantlar": ["4", "5", "6", "7"],
-        "javob": 1,  # index (B = 1)
+        "javob": 1,  # index (5)
     },
     "📖 Ona tili": {
         "savol": "‘Kitob’ so‘zi qaysi turkumga kiradi?",
@@ -57,15 +57,16 @@ async def handle_fan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if fan in questions:
         savol = questions[fan]
+
+        context.user_data["fan"] = fan
         context.user_data["correct"] = savol["javob"]
+        context.user_data["variantlar"] = savol["variantlar"]
 
         text = savol["savol"]
 
         buttons = []
         for i, v in enumerate(savol["variantlar"]):
-            buttons.append(
-                [InlineKeyboardButton(v, callback_data=str(i))]
-            )
+            buttons.append([InlineKeyboardButton(v, callback_data=str(i))])
 
         reply_markup = InlineKeyboardMarkup(buttons)
 
@@ -78,13 +79,21 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     selected = int(query.data)
     correct = context.user_data.get("correct")
+    variantlar = context.user_data.get("variantlar")
 
-    if selected == correct:
-        result_text = "✅ To‘g‘ri javob!"
-    else:
-        result_text = "❌ Noto‘g‘ri javob!"
+    savol = query.message.text.split("\n")[0]
 
-    await query.edit_message_text(result_text)
+    new_text = savol + "\n\n"
+
+    for i, v in enumerate(variantlar):
+        if i == correct:
+            new_text += f"✅ {v}\n"
+        elif i == selected:
+            new_text += f"❌ {v}\n"
+        else:
+            new_text += f"{v}\n"
+
+    await query.edit_message_text(new_text)
 
 
 app = ApplicationBuilder().token(TOKEN).build()
