@@ -1,0 +1,102 @@
+[
+  {
+    "savol": "Agar 3x = 18 bo‘lsa, x ni toping.",
+    "variantlar": ["5", "6", "7", "8"],
+    "javob": 1
+  },
+  {
+    "savol": "2² + 3² = ?",
+    "variantlar": ["10", "12", "13", "14"],
+    "javob": 2
+  },
+  {
+    "savol": "0,5 kasr ko‘rinishida?",
+    "variantlar": ["1/2", "1/5", "2/5", "1/4"],
+    "javob": 0
+  },
+  {
+    "savol": "Agar 10 − x = 4 bo‘lsa, x = ?",
+    "variantlar": ["4", "5", "6", "7"],
+    "javob": 2
+  },
+  {
+    "savol": "Kvadratning tomoni 5 sm. Perimetri?",
+    "variantlar": ["10", "15", "20", "25"],
+    "javob": 2
+  },
+  {
+    "savol": "√49 = ?",
+    "variantlar": ["6", "7", "8", "9"],
+    "javob": 1
+  },
+  {
+    "savol": "3/5 + 2/5 = ?",
+    "variantlar": ["1", "5/5", "4/5", "3/5"],
+    "javob": 0
+  },
+  {
+    "savol": "2³ = ?",
+    "variantlar": ["6", "8", "9", "12"],
+    "javob": 1
+  },
+  {
+    "savol": "Agar 4x = 32 bo‘lsa, x = ?",
+    "variantlar": ["6", "7", "8", "9"],
+    "javob": 2
+  },
+  {
+    "savol": "To‘g‘ri to‘rtburchakning tomonlari 3 va 7. Yuzasi?",
+    "variantlar": ["10", "20", "21", "24"],
+    "javob": 2
+  },
+  {
+    "savol": "0,25 kasr ko‘rinishida?",
+    "variantlar": ["1/2", "1/4", "2/5", "1/5"],
+    "javob": 1
+  },
+  {
+    "savol": "Agar x + 6 = 15 bo‘lsa, x = ?",
+    "variantlar": ["8", "9", "10", "7"],
+    "javob": 1
+  },
+  {
+    "savol": "6² = ?",
+    "variantlar": ["30", "36", "42", "48"],
+    "javob": 1
+  },
+  {
+    "savol": "1/4 + 1/4 = ?",
+    "variantlar": ["1/2", "1/4", "2/4", "3/4"],
+    "javob": 0
+  },
+  {
+    "savol": "Agar 5x = 20 bo‘lsa, x = ?",
+    "variantlar": ["3", "4", "5", "6"],
+    "javob": 1
+  },
+  {
+    "savol": "To‘g‘ri to‘rtburchakning tomonlari 5 va 4. Perimetri?",
+    "variantlar": ["9", "18", "20", "16"],
+    "javob": 1
+  },
+  {
+    "savol": "√64 = ?",
+    "variantlar": ["6", "7", "8", "9"],
+    "javob": 2
+  },
+  {
+    "savol": "2 × 7 − 4 = ?",
+    "variantlar": ["8", "9", "10", "12"],
+    "javob": 2
+  },
+  {
+    "savol": "0,1 kasr ko‘rinishida?",
+    "variantlar": ["1/10", "1/5", "1/2", "2/5"],
+    "javob": 0
+  },
+  {
+    "savol": "7² = ?",
+    "variantlar": ["42", "49", "56", "63"],
+    "javob": 1
+  }
+]
