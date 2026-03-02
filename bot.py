@@ -112,7 +112,6 @@ async def send_question(update, context):
         return
 
     q = question_list[index]
-
     text = f"{index + 1}. {q['savol']}"
 
     buttons = []
@@ -121,7 +120,8 @@ async def send_question(update, context):
 
     reply_markup = InlineKeyboardMarkup(buttons)
 
-    if hasattr(update, "message"):
+    # MUHIM QISM 👇
+    if hasattr(update, "message") and update.message:
         await update.message.reply_text(text, reply_markup=reply_markup)
     else:
         await update.callback_query.message.reply_text(text, reply_markup=reply_markup)
@@ -169,12 +169,17 @@ async def finish_test(update, context):
     score = context.user_data["score"]
     total = len(context.user_data["question_list"])
 
-    await update.callback_query.message.reply_text(
+    result_text = (
         f"🏁 Test tugadi!\n\n"
         f"✅ To‘g‘ri: {score}\n"
         f"❌ Noto‘g‘ri: {total - score}\n"
         f"📊 Ball: {score}/{total}"
     )
+
+    if update.callback_query:
+        await update.callback_query.message.reply_text(result_text)
+    else:
+        await update.message.reply_text(result_text)
 
     context.user_data.clear()
 
