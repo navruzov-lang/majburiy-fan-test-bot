@@ -160,10 +160,11 @@ async def send_question(update: Update, context):
 
     q = questions[index]
     variants = q["variantlar"].copy()
-    correct_text = variants[q["javob"]]
-    random.shuffle(variants)
+correct_text = variants[q["javob"]]
+random.shuffle(variants)
 
-    context.user_data["correct"] = variants.index(correct_text)
+context.user_data["correct"] = variants.index(correct_text)
+context.user_data["shuffled_variants"] = variants
 
     buttons = [
         [InlineKeyboardButton(v, callback_data=f"ans_{i}")]
@@ -201,17 +202,17 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     index = context.user_data["index"]
     q = questions[index]
 
-    variants = q["variantlar"]
+    variants = context.user_data["shuffled_variants"]
 
-    buttons = []
+buttons = []
 
-    for i, v in enumerate(variants):
-        if i == correct:
-            buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
-        elif i == selected:
-            buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
-        else:
-            buttons.append([InlineKeyboardButton(v, callback_data="done")])
+for i, v in enumerate(variants):
+    if i == correct:
+        buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
+    elif i == selected:
+        buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
+    else:
+        buttons.append([InlineKeyboardButton(v, callback_data="done")])
 
     if selected == correct:
         context.user_data["score"] += 1
