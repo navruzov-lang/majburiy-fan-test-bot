@@ -188,17 +188,41 @@ async def send_question(update: Update, context):
 
 # ================= JAVOB =================
 
+import asyncio
+
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
     selected = int(query.data.split("_")[1])
-    correct = context.user_data.get("correct")
+    correct = context.user_data["correct"]
+
+    questions = context.user_data["questions"]
+    index = context.user_data["index"]
+    q = questions[index]
+
+    variants = q["variantlar"]
+
+    buttons = []
+
+    for i, v in enumerate(variants):
+        if i == correct:
+            buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
+        elif i == selected:
+            buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
+        else:
+            buttons.append([InlineKeyboardButton(v, callback_data="done")])
 
     if selected == correct:
         context.user_data["score"] += 1
 
+    await query.edit_message_reply_markup(
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
     context.user_data["index"] += 1
+
+    await asyncio.sleep(1)
 
     await send_question(update, context)
 
@@ -248,7 +272,7 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu))
-app.add_handler(CallbackQueryHandler(handle_answer, pattern="^ans_"))
+app.add_handler(CallbackQueryHandler(handle_answer, pattern="^(ans_|done)"))
 
 print("Bot ishga tushdi 🚀")
 app.run_polling(close_loop=False)
