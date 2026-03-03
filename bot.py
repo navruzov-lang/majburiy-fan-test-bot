@@ -185,15 +185,21 @@ async def send_question(update: Update, context):
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+
+    # MUHIM: darhol javob berish
     await query.answer()
 
     selected = int(query.data.split("_")[1])
-    correct = context.user_data["correct"]
+    correct = context.user_data.get("correct")
 
     if selected == correct:
         context.user_data["score"] += 1
 
     context.user_data["index"] += 1
+
+    # Eski tugmalarni o'chirib yuboramiz
+    await query.edit_message_reply_markup(reply_markup=None)
+
     await send_question(update, context)
 
 # ================= TEST TUGADI =================
