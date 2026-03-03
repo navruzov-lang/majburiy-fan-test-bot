@@ -22,6 +22,7 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = 866410473
 QUESTION_TIME = 20
 SCORES_FILE = "scores.json"
 
@@ -37,7 +38,7 @@ ona_tili = load_questions("ona_tili.json")
 tarix = load_questions("tarix.json")
 
 
-# ================= SCORE =================
+# ================= SCORE SYSTEM =================
 
 def load_scores():
     if not os.path.exists(SCORES_FILE):
@@ -56,18 +57,16 @@ def main_menu():
     return ReplyKeyboardMarkup(
         [
             ["🟢 Test boshlash"],
-            ["📚 Fanlar"],
             ["🏆 Reyting"],
         ],
         resize_keyboard=True,
     )
 
-def subjects_menu():
+def admin_menu():
     return ReplyKeyboardMarkup(
         [
-            ["📐 Matematika"],
-            ["📖 Ona tili"],
-            ["🏛 O'zbekiston tarixi"],
+            ["📊 Statistika"],
+            ["📢 Broadcast"],
             ["🔙 Orqaga"],
         ],
         resize_keyboard=True,
@@ -78,17 +77,21 @@ def subjects_menu():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    await update.message.reply_text(
-        "📌 Asosiy menu:",
-        reply_markup=main_menu(),
-    )
+    await update.message.reply_text("📌 Asosiy menu:", reply_markup=main_menu())
 
 
 # ================= START TEST =================
 
-async def start_test(update, context, question_list):
+async def start_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    context.user_data["questions"] = question_list
+
+    questions = (
+        random.sample(matematika, 10) +
+        random.sample(ona_tili, 10) +
+        random.sample(tarix, 10)
+    )
+
+    context.user_data["questions"] = questions
     context.user_data["index"] = 0
     context.user_data["score"] = 0
     context.user_data["answered"] = False
@@ -101,9 +104,9 @@ async def start_test(update, context, question_list):
     await send_question(update, context)
 
 
-# ================= SEND QUESTION (EDIT MODE) =================
+# ================= SEND QUESTION =================
 
-async def send_question(update: Update, context):
+async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     index = context.user_data["index"]
     questions = context.user_data["questions"]
 
@@ -127,25 +130,18 @@ async def send_question(update: Update, context):
     ]
 
     text = (
-        f"📘 {index+1}/{len(questions)}\n\n"
+        f"📘 {index+1}/30\n\n"
         f"{q['savol']}\n\n"
         f"⏳ {QUESTION_TIME}"
     )
 
-    if "message_id" in context.user_data:
-        await context.bot.edit_message_text(
-            chat_id=context.user_data["chat_id"],
-            message_id=context.user_data["message_id"],
-            text=text,
-            reply_markup=InlineKeyboardMarkup(buttons),
-        )
-    else:
-        msg = await update.message.reply_text(
-            text,
-            reply_markup=InlineKeyboardMarkup(buttons),
-        )
-        context.user_data["message_id"] = msg.message_id
-        context.user_data["chat_id"] = msg.chat_id
+    msg = await update.message.reply_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(buttons),
+    )
+
+    context.user_data["message_id"] = msg.message_id
+    context.user_data["chat_id"] = msg.chat_id
 
     context.user_data["timer_task"] = asyncio.create_task(
         countdown(context)
@@ -154,7 +150,7 @@ async def send_question(update: Update, context):
 
 # ================= COUNTDOWN =================
 
-async def countdown(context):
+async def countdown(context: ContextTypes.DEFAULT_TYPE):
     while context.user_data["time_left"] > 0:
         await asyncio.sleep(1)
 
@@ -168,8 +164,7 @@ async def countdown(context):
                 chat_id=context.user_data["chat_id"],
                 message_id=context.user_data["message_id"],
                 text=(
-                    f"📘 {context.user_data['index']+1}/"
-                    f"{len(context.user_data['questions'])}\n\n"
+                    f"📘 {context.user_data['index']+1}/30\n\n"
                     f"{context.user_data['questions'][context.user_data['index']]['savol']}\n\n"
                     f"⏳ {context.user_data['time_left']}"
                 ),
@@ -188,10 +183,6 @@ async def countdown(context):
 
 
 async def send_question_by_context(context):
-    await send_question_dummy(context)
-
-
-async def send_question_dummy(context):
     fake_update = type("obj", (object,), {"message": None})
     await send_question(fake_update, context)
 
@@ -212,9 +203,26 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     selected = int(query.data.split("_")[1])
     correct = context.user_data["correct"]
+    variants = context.user_data["variants"]
+
+    buttons = []
+
+    for i, v in enumerate(variants):
+        if i == correct:
+            buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
+        elif i == selected:
+            buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
+        else:
+            buttons.append([InlineKeyboardButton(v, callback_data="done")])
 
     if selected == correct:
         context.user_data["score"] += 1
+
+    await query.edit_message_reply_markup(
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+    await asyncio.sleep(1)
 
     context.user_data["index"] += 1
     await send_question(update, context)
@@ -222,26 +230,83 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ================= FINISH =================
 
-async def finish_test(update, context):
+async def finish_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     score = context.user_data["score"]
-    total = len(context.user_data["questions"])
+    total = 30
 
-    await context.bot.edit_message_text(
+    user_id = update.effective_user.id
+    scores = load_scores()
+
+    if str(user_id) not in scores:
+        scores[str(user_id)] = 0
+
+    scores[str(user_id)] += score
+    save_scores(scores)
+
+    await context.bot.send_message(
         chat_id=context.user_data["chat_id"],
-        message_id=context.user_data["message_id"],
         text=(
             f"🏁 Test tugadi!\n\n"
             f"✅ To‘g‘ri: {score}\n"
             f"❌ Noto‘g‘ri: {total - score}\n"
             f"📊 Ball: {score}/{total}"
         ),
-    )
-
-    await context.bot.send_message(
-        chat_id=context.user_data["chat_id"],
-        text="📌 Asosiy menu:",
         reply_markup=main_menu(),
     )
+
+
+# ================= REYTING =================
+
+async def show_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    scores = load_scores()
+
+    if not scores:
+        await update.message.reply_text("Hali reyting yo‘q.")
+        return
+
+    sorted_users = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+    text = "🏆 Reyting:\n\n"
+    for i, (uid, score) in enumerate(sorted_users[:10], 1):
+        text += f"{i}. ID {uid} — {score} ball\n"
+
+    await update.message.reply_text(text)
+
+
+# ================= ADMIN =================
+
+async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+    await update.message.reply_text("👑 Admin panel:", reply_markup=admin_menu())
+
+
+async def handle_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    text = update.message.text
+
+    if text == "📊 Statistika":
+        scores = load_scores()
+        await update.message.reply_text(f"Foydalanuvchilar soni: {len(scores)}")
+
+    elif text == "📢 Broadcast":
+        context.user_data["broadcast"] = True
+        await update.message.reply_text("Xabarni yuboring:")
+
+    elif text == "🔙 Orqaga":
+        await start(update, context)
+
+    elif context.user_data.get("broadcast"):
+        scores = load_scores()
+        for uid in scores.keys():
+            try:
+                await context.bot.send_message(chat_id=int(uid), text=text)
+            except:
+                pass
+        context.user_data["broadcast"] = False
+        await update.message.reply_text("Xabar yuborildi.")
 
 
 # ================= MENU HANDLER =================
@@ -250,30 +315,16 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "🟢 Test boshlash":
-        questions = (
-            random.sample(matematika, 10) +
-            random.sample(ona_tili, 10) +
-            random.sample(tarix, 10)
-        )
-        await start_test(update, context, questions)
+        await start_test(update, context)
 
-    elif text == "📚 Fanlar":
-        await update.message.reply_text(
-            "📚 Fan tanlang:",
-            reply_markup=subjects_menu(),
-        )
+    elif text == "🏆 Reyting":
+        await show_rating(update, context)
 
-    elif text == "📐 Matematika":
-        await start_test(update, context, matematika)
+    elif text == "/admin":
+        await admin_panel(update, context)
 
-    elif text == "📖 Ona tili":
-        await start_test(update, context, ona_tili)
-
-    elif text == "🏛 O'zbekiston tarixi":
-        await start_test(update, context, tarix)
-
-    elif text == "🔙 Orqaga":
-        await start(update, context)
+    else:
+        await handle_admin(update, context)
 
 
 # ================= KEEP ALIVE =================
