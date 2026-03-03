@@ -150,7 +150,7 @@ async def start_test(update, context, question_list):
 
 # ================= SAVOL =================
 
-async def send_question(update, context):
+async def send_question(update: Update, context):
     index = context.user_data["index"]
     questions = context.user_data["questions"]
 
@@ -170,7 +170,13 @@ async def send_question(update, context):
         for i, v in enumerate(variants)
     ]
 
-    await update.message.reply_text(
+    message = (
+        update.callback_query.message
+        if update.callback_query
+        else update.message
+    )
+
+    await message.reply_text(
         f"{index+1}. {q['savol']}",
         reply_markup=InlineKeyboardMarkup(buttons),
     )
@@ -188,25 +194,36 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["score"] += 1
 
     context.user_data["index"] += 1
-    await send_question(query, context)
+    await send_question(update, context)
 
 # ================= TEST TUGADI =================
 
-async def finish_test(update, context):
+async def finish_test(update: Update, context):
     score = context.user_data["score"]
     total = len(context.user_data["questions"])
 
+    user = (
+        update.callback_query.from_user
+        if update.callback_query
+        else update.message.from_user
+    )
+
     scores = load_scores()
-    user_id = str(update.callback_query.from_user.id)
-    name = update.callback_query.from_user.first_name
+    uid = str(user.id)
 
-    if user_id not in scores:
-        scores[user_id] = {"name": name, "score": 0}
+    if uid not in scores:
+        scores[uid] = {"name": user.first_name, "score": 0}
 
-    scores[user_id]["score"] += score
+    scores[uid]["score"] += score
     save_scores(scores)
 
-    await update.callback_query.message.reply_text(
+    message = (
+        update.callback_query.message
+        if update.callback_query
+        else update.message
+    )
+
+    await message.reply_text(
         f"🏁 Test tugadi!\n\n"
         f"✅ To‘g‘ri: {score}\n"
         f"❌ Noto‘g‘ri: {total - score}\n"
