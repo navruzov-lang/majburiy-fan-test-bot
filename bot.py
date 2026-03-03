@@ -22,6 +22,21 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 TOTAL_QUESTIONS = 10
+SCORES_FILE = "scores.json"
+
+
+# ================= SCORE SYSTEM =================
+
+def load_scores():
+    if not os.path.exists(SCORES_FILE):
+        return {}
+    with open(SCORES_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_scores(scores):
+    with open(SCORES_FILE, "w", encoding="utf-8") as f:
+        json.dump(scores, f, ensure_ascii=False, indent=4)
 
 
 # ================= LOAD QUESTIONS =================
@@ -29,6 +44,7 @@ TOTAL_QUESTIONS = 10
 def load_questions(filename):
     with open(f"questions/{filename}", "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 questions = {
     "📐 Matematika": load_questions("matematika.json"),
@@ -52,6 +68,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📚 Fan tanlang:",
         reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
     )
+
+
+# ================= TOP COMMAND =================
+
+async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    scores = load_scores()
+
+    if not scores:
+        await update.message.reply_text("Hali reyting yo‘q.")
+        return
+
+    sorted_users = sorted(
+        scores.values(),
+        key=lambda x: x["score"],
+        reverse=True
+    )[:10]
+
+    text = "🏆 TOP 10 Reyting:\n\n"
+
+    for i, user in enumerate(sorted_users, start=1):
+        text += f"{i}. {user['name']} — {user['score']} ball\n"
+
+    await update.message.reply_text(text)
 
 
 # ================= FAN TANLASH =================
@@ -139,6 +178,17 @@ async def finish_test(update, context):
     total = len(context.user_data["question_list"])
     subject = context.user_data["subject"]
 
+    # 🔥 REYTINGNI SAQLASH
+    scores = load_scores()
+    user_id = str(query.from_user.id)
+    username = query.from_user.first_name
+
+    if user_id not in scores:
+        scores[user_id] = {"name": username, "score": 0}
+
+    scores[user_id]["score"] += score
+    save_scores(scores)
+
     text = (
         f"🏁 Test tugadi!\n\n"
         f"📘 Fan: {subject}\n"
@@ -204,12 +254,10 @@ threading.Thread(target=run_web).start()
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("top", top))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, choose_subject))
 app.add_handler(CallbackQueryHandler(handle_menu, pattern="^(retry|menu)$"))
 app.add_handler(CallbackQueryHandler(handle_answer, pattern="^answer_"))
 
 print("Bot ishga tushdi 🚀")
-app.run_polling(
-    allowed_updates=Update.ALL_TYPES,
-    close_loop=False,
-)
+app.run_polling(close_loop=False)
