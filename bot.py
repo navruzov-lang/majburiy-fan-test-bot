@@ -195,21 +195,17 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     selected = int(query.data.split("_")[1])
     correct = context.user_data["correct"]
 
-    questions = context.user_data["questions"]
-    index = context.user_data["index"]
-    q = questions[index]
-
     variants = context.user_data["shuffled_variants"]
 
-buttons = []
+    buttons = []
 
-for i, v in enumerate(variants):
-    if i == correct:
-        buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
-    elif i == selected:
-        buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
-    else:
-        buttons.append([InlineKeyboardButton(v, callback_data="done")])
+    for i, v in enumerate(variants):
+        if i == correct:
+            buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
+        elif i == selected:
+            buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
+        else:
+            buttons.append([InlineKeyboardButton(v, callback_data="done")])
 
     if selected == correct:
         context.user_data["score"] += 1
@@ -220,6 +216,7 @@ for i, v in enumerate(variants):
 
     context.user_data["index"] += 1
 
+    import asyncio
     await asyncio.sleep(1)
 
     await send_question(update, context)
