@@ -185,8 +185,6 @@ async def send_question(update: Update, context):
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-
-    # MUHIM: darhol javob berish
     await query.answer()
 
     selected = int(query.data.split("_")[1])
@@ -197,9 +195,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["index"] += 1
 
-    # Eski tugmalarni o'chirib yuboramiz
-    await query.edit_message_reply_markup(reply_markup=None)
-
     await send_question(update, context)
 
 # ================= TEST TUGADI =================
@@ -208,11 +203,7 @@ async def finish_test(update: Update, context):
     score = context.user_data["score"]
     total = len(context.user_data["questions"])
 
-    user = (
-        update.callback_query.from_user
-        if update.callback_query
-        else update.message.from_user
-    )
+    user = update.callback_query.from_user
 
     scores = load_scores()
     uid = str(user.id)
@@ -223,13 +214,7 @@ async def finish_test(update: Update, context):
     scores[uid]["score"] += score
     save_scores(scores)
 
-    message = (
-        update.callback_query.message
-        if update.callback_query
-        else update.message
-    )
-
-    await message.reply_text(
+    await update.callback_query.message.reply_text(
         f"🏁 Test tugadi!\n\n"
         f"✅ To‘g‘ri: {score}\n"
         f"❌ Noto‘g‘ri: {total - score}\n"
