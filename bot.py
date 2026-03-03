@@ -160,21 +160,18 @@ async def send_question(update: Update, context):
 
     q = questions[index]
     variants = q["variantlar"].copy()
-correct_text = variants[q["javob"]]
-random.shuffle(variants)
+    correct_text = variants[q["javob"]]
+    random.shuffle(variants)
 
-context.user_data["correct"] = variants.index(correct_text)
-context.user_data["shuffled_variants"] = variants
+    context.user_data["correct"] = variants.index(correct_text)
+    context.user_data["shuffled_variants"] = variants
 
     buttons = [
         [InlineKeyboardButton(v, callback_data=f"ans_{i}")]
         for i, v in enumerate(variants)
     ]
 
-    text = (
-        f"📘 {index+1}/{len(questions)}\n\n"
-        f"{q['savol']}"
-    )
+    text = f"📘 {index+1}/{len(questions)}\n\n{q['savol']}"
 
     if update.callback_query:
         await update.callback_query.edit_message_text(
