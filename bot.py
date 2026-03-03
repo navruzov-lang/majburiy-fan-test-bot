@@ -170,16 +170,21 @@ async def send_question(update: Update, context):
         for i, v in enumerate(variants)
     ]
 
-    message = (
-        update.callback_query.message
-        if update.callback_query
-        else update.message
+    text = (
+        f"📘 {index+1}/{len(questions)}\n\n"
+        f"{q['savol']}"
     )
 
-    await message.reply_text(
-        f"{index+1}. {q['savol']}",
-        reply_markup=InlineKeyboardMarkup(buttons),
-    )
+    if update.callback_query:
+        await update.callback_query.edit_message_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+    else:
+        await update.message.reply_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
 
 # ================= JAVOB =================
 
