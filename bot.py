@@ -329,155 +329,6 @@ async def finish_test(update, context):
     )
 
 
-# ================= MENU HANDLER =================
-
-async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    text = update.message.text
-    user_id = update.effective_user.id
-
-    if text == "🟢 Test boshlash":
-
-        questions = (
-            random.sample(matematika, 10)
-            + random.sample(ona_tili, 10)
-            + random.sample(tarix, 10)
-        )
-
-        await start_test(update, context, questions)
-
-
-    elif text == "📚 Fanlar":
-        await update.message.reply_text("📚 Fan tanlang:", reply_markup=subjects_menu())
-
-
-    elif text == "📐 Matematika":
-        await start_test(update, context, matematika)
-
-
-    elif text == "📖 Ona tili":
-        await start_test(update, context, ona_tili)
-
-
-    elif text == "🏛 O'zbekiston tarixi":
-        await start_test(update, context, tarix)
-
-
-    elif text == "🏆 Reyting":
-
-        scores = load_scores()
-
-        if not scores:
-            await update.message.reply_text("Hali reyting yo‘q.")
-            return
-
-        sorted_users = sorted(scores.values(), key=lambda x: x["score"], reverse=True)
-
-        text = "🏆 Reyting:\n\n"
-
-        for i, user in enumerate(sorted_users[:10], 1):
-            text += f"{i}. {user['name']} — {user['score']} ball\n"
-
-        await update.message.reply_text(text)
-
-
-    elif text == "👤 Profil":
-        await show_profile(update, context)
-
-
-    elif text == "👑 Admin" and user_id == ADMIN_ID:
-        await update.message.reply_text("👑 Admin panel:", reply_markup=admin_menu())
-
-
-    elif text == "📊 Statistika" and user_id == ADMIN_ID:
-
-        scores = load_scores()
-
-        user_count = len(scores)
-
-        total_score = sum(user["score"] for user in scores.values())
-
-        await update.message.reply_text(
-            f"📊 Bot statistikasi\n\n"
-            f"👥 Foydalanuvchilar: {user_count}\n"
-            f"🏆 Jami ishlangan ball: {total_score}"
-        )
-
-
-    elif text == "📢 Broadcast" and user_id == ADMIN_ID:
-
-        context.user_data["broadcast"] = True
-
-        await update.message.reply_text("Xabarni yuboring:")
-
-
-    elif context.user_data.get("broadcast") and user_id == ADMIN_ID:
-
-        scores = load_scores()
-
-        for uid in scores.keys():
-
-            try:
-                await context.bot.send_message(chat_id=int(uid), text=text)
-
-            except:
-                pass
-
-        context.user_data["broadcast"] = False
-
-        await update.message.reply_text("Xabar yuborildi.")
-
-
-    # ================= ADD QUESTION =================
-
-    elif text == "➕ Savol qo'shish" and user_id == ADMIN_ID:
-        await admin_add_question(update, context)
-
-
-    elif context.user_data.get("add_question") and user_id == ADMIN_ID:
-        await admin_add_question_flow(update, context)
-
-
-    elif text == "🔙 Orqaga":
-        await start(update, context)
-
-
-# ================= KEEP ALIVE =================
-
-class Handler(BaseHTTPRequestHandler):
-
-    def do_GET(self):
-
-        self.send_response(200)
-
-        self.end_headers()
-
-        self.wfile.write(b"Bot is running")
-
-
-def run_web():
-
-    port = int(os.environ.get("PORT", 10000))
-
-    server = HTTPServer(("0.0.0.0", port), Handler)
-
-    server.serve_forever()
-
-
-threading.Thread(target=run_web).start()
-
-
-# ================= APP =================
-
-app = ApplicationBuilder().token(TOKEN).build()
-
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu))
-app.add_handler(CallbackQueryHandler(handle_answer, pattern="^ans_"))
-
-print("Bot ishga tushdi 🚀")
-
-app.run_polling(close_loop=False)
 # ================= ADMIN ADD QUESTION =================
 
 async def admin_add_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -527,27 +378,27 @@ async def admin_add_question_flow(update: Update, context: ContextTypes.DEFAULT_
 
         await update.message.reply_text("Savolni yuboring:")
 
+
     elif step == "question":
 
         context.user_data["new_question"] = text
-
         context.user_data["add_question"] = "variants"
 
         await update.message.reply_text(
             "Variantlarni vergul bilan yuboring\nMisol:\nA,B,C,D"
         )
 
+
     elif step == "variants":
 
         variants = [v.strip() for v in text.split(",")]
-
         context.user_data["new_variants"] = variants
-
         context.user_data["add_question"] = "correct"
 
         await update.message.reply_text(
             f"To'g'ri javob raqamini yuboring (0-{len(variants)-1})"
         )
+
 
     elif step == "correct":
 
@@ -572,3 +423,153 @@ async def admin_add_question_flow(update: Update, context: ContextTypes.DEFAULT_
         context.user_data["add_question"] = None
 
         await update.message.reply_text("✅ Savol qo'shildi")
+
+
+# ================= MENU HANDLER =================
+
+async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    text = update.message.text
+    user_id = update.effective_user.id
+
+    if text == "🟢 Test boshlash":
+
+        questions = (
+            random.sample(matematika, 10)
+            + random.sample(ona_tili, 10)
+            + random.sample(tarix, 10)
+        )
+
+        await start_test(update, context, questions)
+
+
+    elif text == "📚 Fanlar":
+        await update.message.reply_text("📚 Fan tanlang:", reply_markup=subjects_menu())
+
+
+    elif text == "📐 Matematika":
+        await start_test(update, context, matematika)
+
+
+    elif text == "📖 Ona tili":
+        await start_test(update, context, ona_tili)
+
+
+    elif text == "🏛 O'zbekiston tarixi":
+        await start_test(update, context, tarix)
+
+
+    elif text == "🏆 Reyting":
+
+        scores = load_scores()
+
+        if not scores:
+            await update.message.reply_text("Hali reyting yo‘q.")
+            return
+
+        sorted_users = sorted(scores.values(), key=lambda x: x["score"], reverse=True)
+
+        text_out = "🏆 Reyting:\n\n"
+
+        for i, user in enumerate(sorted_users[:10], 1):
+            text_out += f"{i}. {user['name']} — {user['score']} ball\n"
+
+        await update.message.reply_text(text_out)
+
+
+    elif text == "👤 Profil":
+        await show_profile(update, context)
+
+
+    elif text == "👑 Admin" and user_id == ADMIN_ID:
+        await update.message.reply_text("👑 Admin panel:", reply_markup=admin_menu())
+
+
+    elif text == "📊 Statistika" and user_id == ADMIN_ID:
+
+        scores = load_scores()
+
+        user_count = len(scores)
+
+        total_score = sum(user["score"] for user in scores.values())
+
+        await update.message.reply_text(
+            f"📊 Bot statistikasi\n\n"
+            f"👥 Foydalanuvchilar: {user_count}\n"
+            f"🏆 Jami ishlangan ball: {total_score}"
+        )
+
+
+    elif text == "➕ Savol qo'shish" and user_id == ADMIN_ID:
+        await admin_add_question(update, context)
+
+
+    elif context.user_data.get("add_question") and user_id == ADMIN_ID:
+        await admin_add_question_flow(update, context)
+
+
+    elif text == "📢 Broadcast" and user_id == ADMIN_ID:
+
+        context.user_data["broadcast"] = True
+
+        await update.message.reply_text("Xabarni yuboring:")
+
+
+    elif context.user_data.get("broadcast") and user_id == ADMIN_ID:
+
+        scores = load_scores()
+
+        for uid in scores.keys():
+
+            try:
+                await context.bot.send_message(chat_id=int(uid), text=text)
+
+            except:
+                pass
+
+        context.user_data["broadcast"] = False
+
+        await update.message.reply_text("Xabar yuborildi.")
+
+
+    elif text == "🔙 Orqaga":
+        await start(update, context)
+
+
+# ================= KEEP ALIVE =================
+
+class Handler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+
+        self.send_response(200)
+
+        self.end_headers()
+
+        self.wfile.write(b"Bot is running")
+
+
+def run_web():
+
+    port = int(os.environ.get("PORT", 10000))
+
+    server = HTTPServer(("0.0.0.0", port), Handler)
+
+    server.serve_forever()
+
+
+threading.Thread(target=run_web).start()
+
+
+# ================= APP =================
+
+app = ApplicationBuilder().token(TOKEN).build()
+
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu))
+app.add_handler(CallbackQueryHandler(handle_answer, pattern="^ans_"))
+
+print("Bot ishga tushdi 🚀")
+
+app.run_polling(close_loop=False)
+
