@@ -85,6 +85,7 @@ def admin_menu():
         [
             ["📊 Statistika"],
             ["📢 Broadcast"],
+            ["➕ Savol qo'shish"],
             ["🔙 Orqaga"],
         ],
         resize_keyboard=True,
@@ -427,6 +428,16 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Xabar yuborildi.")
 
 
+    # ================= ADD QUESTION =================
+
+    elif text == "➕ Savol qo'shish" and user_id == ADMIN_ID:
+        await admin_add_question(update, context)
+
+
+    elif context.user_data.get("add_question") and user_id == ADMIN_ID:
+        await admin_add_question_flow(update, context)
+
+
     elif text == "🔙 Orqaga":
         await start(update, context)
 
@@ -467,3 +478,97 @@ app.add_handler(CallbackQueryHandler(handle_answer, pattern="^ans_"))
 print("Bot ishga tushdi 🚀")
 
 app.run_polling(close_loop=False)
+# ================= ADMIN ADD QUESTION =================
+
+async def admin_add_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    keyboard = ReplyKeyboardMarkup(
+        [
+            ["📐 Matematika"],
+            ["📖 Ona tili"],
+            ["🏛 O'zbekiston tarixi"],
+            ["🔙 Orqaga"],
+        ],
+        resize_keyboard=True,
+    )
+
+    context.user_data["add_question"] = "subject"
+
+    await update.message.reply_text(
+        "Qaysi fan uchun savol qo'shmoqchisiz?",
+        reply_markup=keyboard,
+    )
+
+
+async def admin_add_question_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    step = context.user_data.get("add_question")
+
+    if not step:
+        return
+
+    text = update.message.text
+
+    if step == "subject":
+
+        if text == "📐 Matematika":
+            context.user_data["subject_file"] = "questions/matematika.json"
+
+        elif text == "📖 Ona tili":
+            context.user_data["subject_file"] = "questions/ona_tili.json"
+
+        elif text == "🏛 O'zbekiston tarixi":
+            context.user_data["subject_file"] = "questions/tarix.json"
+
+        else:
+            return
+
+        context.user_data["add_question"] = "question"
+
+        await update.message.reply_text("Savolni yuboring:")
+
+    elif step == "question":
+
+        context.user_data["new_question"] = text
+
+        context.user_data["add_question"] = "variants"
+
+        await update.message.reply_text(
+            "Variantlarni vergul bilan yuboring\nMisol:\nA,B,C,D"
+        )
+
+    elif step == "variants":
+
+        variants = [v.strip() for v in text.split(",")]
+
+        context.user_data["new_variants"] = variants
+
+        context.user_data["add_question"] = "correct"
+
+        await update.message.reply_text(
+            f"To'g'ri javob raqamini yuboring (0-{len(variants)-1})"
+        )
+
+    elif step == "correct":
+
+        correct = int(text)
+
+        filename = context.user_data["subject_file"]
+
+        with open(filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        data.append(
+            {
+                "savol": context.user_data["new_question"],
+                "variantlar": context.user_data["new_variants"],
+                "javob": correct,
+            }
+        )
+
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        context.user_data["add_question"] = None
+
+        await update.message.reply_text("✅ Savol qo'shildi")
