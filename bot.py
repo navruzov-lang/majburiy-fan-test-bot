@@ -85,7 +85,6 @@ def admin_menu():
         [
             ["📊 Statistika"],
             ["📢 Broadcast"],
-            ["➕ Savol qo'shish"],
             ["🔙 Orqaga"],
         ],
         resize_keyboard=True,
@@ -124,98 +123,6 @@ async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(text)
-
-
-# ================= ADMIN ADD QUESTION =================
-
-async def admin_add_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    keyboard = ReplyKeyboardMarkup(
-        [
-            ["📐 Matematika"],
-            ["📖 Ona tili"],
-            ["🏛 O'zbekiston tarixi"],
-            ["🔙 Orqaga"],
-        ],
-        resize_keyboard=True,
-    )
-
-    context.user_data["add_question"] = "subject"
-
-    await update.message.reply_text(
-        "Qaysi fan uchun savol qo'shmoqchisiz?",
-        reply_markup=keyboard,
-    )
-
-
-async def admin_add_question_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    step = context.user_data.get("add_question")
-    text = update.message.text
-
-    if step == "subject":
-
-        if text == "📐 Matematika":
-            context.user_data["subject_file"] = "questions/matematika.json"
-        elif text == "📖 Ona tili":
-            context.user_data["subject_file"] = "questions/ona_tili.json"
-        elif text == "🏛 O'zbekiston tarixi":
-            context.user_data["subject_file"] = "questions/tarix.json"
-        else:
-            return
-
-        context.user_data["add_question"] = "question"
-        await update.message.reply_text("Savolni yuboring:")
-        return
-
-
-    elif step == "question":
-
-        context.user_data["new_question"] = text
-        context.user_data["add_question"] = "variants"
-
-        await update.message.reply_text(
-            "Variantlarni vergul bilan yuboring\nMisol:\nA,B,C,D"
-        )
-        return
-
-
-    elif step == "variants":
-
-        variants = [v.strip() for v in text.split(",")]
-        context.user_data["new_variants"] = variants
-        context.user_data["add_question"] = "correct"
-
-        await update.message.reply_text(
-            f"To'g'ri javob raqamini yuboring (0-{len(variants)-1})"
-        )
-        return
-
-
-    elif step == "correct":
-
-        correct = int(text)
-
-        filename = context.user_data["subject_file"]
-
-        with open(filename, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        data.append(
-            {
-                "savol": context.user_data["new_question"],
-                "variantlar": context.user_data["new_variants"],
-                "javob": correct,
-            }
-        )
-
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-
-        context.user_data["add_question"] = None
-
-        await update.message.reply_text("✅ Savol qo'shildi")
-        return
 
 
 # ================= START TEST =================
@@ -269,13 +176,75 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"⏳ {QUESTION_TIME}"
     )
 
-    msg = await update.message.reply_text(
-        text,
-        reply_markup=InlineKeyboardMarkup(buttons),
-    )
+    if "message_id" in context.user_data:
 
-    context.user_data["message_id"] = msg.message_id
-    context.user_data["chat_id"] = msg.chat_id
+        await context.bot.edit_message_text(
+            chat_id=context.user_data["chat_id"],
+            message_id=context.user_data["message_id"],
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+
+    else:
+
+        msg = await update.message.reply_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+
+        context.user_data["message_id"] = msg.message_id
+        context.user_data["chat_id"] = msg.chat_id
+
+    context.user_data["timer_task"] = asyncio.create_task(countdown(context))
+
+
+# ================= COUNTDOWN =================
+
+async def countdown(context):
+
+    while context.user_data["time_left"] > 0:
+
+        await asyncio.sleep(1)
+
+        if context.user_data["answered"]:
+            return
+
+        context.user_data["time_left"] -= 1
+
+        try:
+
+            await context.bot.edit_message_text(
+                chat_id=context.user_data["chat_id"],
+                message_id=context.user_data["message_id"],
+                text=(
+                    f"📘 {context.user_data['index']+1}/"
+                    f"{len(context.user_data['questions'])}\n\n"
+                    f"{context.user_data['questions'][context.user_data['index']]['savol']}\n\n"
+                    f"⏳ {context.user_data['time_left']}"
+                ),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton(v, callback_data=f"ans_{i}")]
+                    for i, v in enumerate(context.user_data["variants"])
+                ]),
+            )
+
+        except:
+            return
+
+    context.user_data["answered"] = True
+
+    await asyncio.sleep(1)
+
+    context.user_data["index"] += 1
+
+    await send_question_dummy(context)
+
+
+async def send_question_dummy(context):
+
+    fake_update = type("obj", (), {"message": None})
+
+    await send_question(fake_update, context)
 
 
 # ================= HANDLE ANSWER =================
@@ -289,6 +258,9 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     context.user_data["answered"] = True
+
+    if "timer_task" in context.user_data:
+        context.user_data["timer_task"].cancel()
 
     selected = int(query.data.split("_")[1])
     correct = context.user_data["correct"]
@@ -363,11 +335,6 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_id = update.effective_user.id
 
-    # FIRST handle admin question flow
-    if context.user_data.get("add_question") and user_id == ADMIN_ID:
-        await admin_add_question_flow(update, context)
-        return
-
     if text == "🟢 Test boshlash":
 
         questions = (
@@ -405,12 +372,12 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         sorted_users = sorted(scores.values(), key=lambda x: x["score"], reverse=True)
 
-        text_out = "🏆 Reyting:\n\n"
+        text = "🏆 Reyting:\n\n"
 
         for i, user in enumerate(sorted_users[:10], 1):
-            text_out += f"{i}. {user['name']} — {user['score']} ball\n"
+            text += f"{i}. {user['name']} — {user['score']} ball\n"
 
-        await update.message.reply_text(text_out)
+        await update.message.reply_text(text)
 
 
     elif text == "👤 Profil":
@@ -421,8 +388,43 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("👑 Admin panel:", reply_markup=admin_menu())
 
 
-    elif text == "➕ Savol qo'shish" and user_id == ADMIN_ID:
-        await admin_add_question(update, context)
+    elif text == "📊 Statistika" and user_id == ADMIN_ID:
+
+        scores = load_scores()
+
+        user_count = len(scores)
+
+        total_score = sum(user["score"] for user in scores.values())
+
+        await update.message.reply_text(
+            f"📊 Bot statistikasi\n\n"
+            f"👥 Foydalanuvchilar: {user_count}\n"
+            f"🏆 Jami ishlangan ball: {total_score}"
+        )
+
+
+    elif text == "📢 Broadcast" and user_id == ADMIN_ID:
+
+        context.user_data["broadcast"] = True
+
+        await update.message.reply_text("Xabarni yuboring:")
+
+
+    elif context.user_data.get("broadcast") and user_id == ADMIN_ID:
+
+        scores = load_scores()
+
+        for uid in scores.keys():
+
+            try:
+                await context.bot.send_message(chat_id=int(uid), text=text)
+
+            except:
+                pass
+
+        context.user_data["broadcast"] = False
+
+        await update.message.reply_text("Xabar yuborildi.")
 
 
     elif text == "🔙 Orqaga":
