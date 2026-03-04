@@ -54,13 +54,17 @@ def save_scores(scores):
 # ================= MENUS =================
 
 def main_menu(user_id):
+
     buttons = [
         ["🟢 Test boshlash"],
         ["📚 Fanlar"],
         ["🏆 Reyting"],
+        ["👤 Profil"],
     ]
+
     if user_id == ADMIN_ID:
         buttons.append(["👑 Admin"])
+
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 
@@ -90,16 +94,41 @@ def admin_menu():
 # ================= START =================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     context.user_data.clear()
+
     await update.message.reply_text(
         "📌 Asosiy menu:",
         reply_markup=main_menu(update.effective_user.id),
     )
 
 
+# ================= PROFILE =================
+
+async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user = update.effective_user
+    scores = load_scores()
+
+    if str(user.id) not in scores:
+        await update.message.reply_text("Siz hali test ishlamagansiz.")
+        return
+
+    user_data = scores[str(user.id)]
+
+    text = (
+        f"👤 Profil\n\n"
+        f"Ism: {user_data['name']}\n"
+        f"🏆 Jami ball: {user_data['score']}"
+    )
+
+    await update.message.reply_text(text)
+
+
 # ================= START TEST =================
 
 async def start_test(update, context, question_list):
+
     context.user_data.clear()
     context.user_data["questions"] = question_list
     context.user_data["index"] = 0
@@ -117,6 +146,7 @@ async def start_test(update, context, question_list):
 # ================= SEND QUESTION =================
 
 async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     index = context.user_data["index"]
     questions = context.user_data["questions"]
 
@@ -125,6 +155,7 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     q = questions[index]
+
     variants = q["variantlar"].copy()
     correct_text = variants[q["javob"]]
     random.shuffle(variants)
@@ -146,17 +177,21 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     if "message_id" in context.user_data:
+
         await context.bot.edit_message_text(
             chat_id=context.user_data["chat_id"],
             message_id=context.user_data["message_id"],
             text=text,
             reply_markup=InlineKeyboardMarkup(buttons),
         )
+
     else:
+
         msg = await update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(buttons),
         )
+
         context.user_data["message_id"] = msg.message_id
         context.user_data["chat_id"] = msg.chat_id
 
@@ -166,7 +201,9 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================= COUNTDOWN =================
 
 async def countdown(context):
+
     while context.user_data["time_left"] > 0:
+
         await asyncio.sleep(1)
 
         if context.user_data["answered"]:
@@ -175,6 +212,7 @@ async def countdown(context):
         context.user_data["time_left"] -= 1
 
         try:
+
             await context.bot.edit_message_text(
                 chat_id=context.user_data["chat_id"],
                 message_id=context.user_data["message_id"],
@@ -189,27 +227,30 @@ async def countdown(context):
                     for i, v in enumerate(context.user_data["variants"])
                 ]),
             )
+
         except:
             return
 
     context.user_data["answered"] = True
+
     await asyncio.sleep(1)
+
     context.user_data["index"] += 1
-    await send_question_from_timer(context)
 
-
-async def send_question_from_timer(context):
     await send_question_dummy(context)
 
 
 async def send_question_dummy(context):
+
     fake_update = type("obj", (), {"message": None})
+
     await send_question(fake_update, context)
 
 
 # ================= HANDLE ANSWER =================
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     query = update.callback_query
     await query.answer()
 
@@ -228,10 +269,13 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     buttons = []
 
     for i, v in enumerate(variants):
+
         if i == correct:
             buttons.append([InlineKeyboardButton(f"✅ {v}", callback_data="done")])
+
         elif i == selected:
             buttons.append([InlineKeyboardButton(f"❌ {v}", callback_data="done")])
+
         else:
             buttons.append([InlineKeyboardButton(v, callback_data="done")])
 
@@ -245,12 +289,14 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await asyncio.sleep(1)
 
     context.user_data["index"] += 1
+
     await send_question(update, context)
 
 
 # ================= FINISH =================
 
 async def finish_test(update, context):
+
     score = context.user_data["score"]
     total = len(context.user_data["questions"])
     user = update.effective_user
@@ -261,6 +307,7 @@ async def finish_test(update, context):
         scores[str(user.id)] = {"name": user.first_name, "score": 0}
 
     scores[str(user.id)]["score"] += score
+
     save_scores(scores)
 
     await context.bot.edit_message_text(
@@ -284,60 +331,101 @@ async def finish_test(update, context):
 # ================= MENU HANDLER =================
 
 async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     text = update.message.text
     user_id = update.effective_user.id
 
     if text == "🟢 Test boshlash":
+
         questions = (
             random.sample(matematika, 10)
             + random.sample(ona_tili, 10)
             + random.sample(tarix, 10)
         )
+
         await start_test(update, context, questions)
+
 
     elif text == "📚 Fanlar":
         await update.message.reply_text("📚 Fan tanlang:", reply_markup=subjects_menu())
 
+
     elif text == "📐 Matematika":
         await start_test(update, context, matematika)
+
 
     elif text == "📖 Ona tili":
         await start_test(update, context, ona_tili)
 
+
     elif text == "🏛 O'zbekiston tarixi":
         await start_test(update, context, tarix)
 
+
     elif text == "🏆 Reyting":
+
         scores = load_scores()
+
         if not scores:
             await update.message.reply_text("Hali reyting yo‘q.")
             return
+
         sorted_users = sorted(scores.values(), key=lambda x: x["score"], reverse=True)
+
         text = "🏆 Reyting:\n\n"
+
         for i, user in enumerate(sorted_users[:10], 1):
             text += f"{i}. {user['name']} — {user['score']} ball\n"
+
         await update.message.reply_text(text)
+
+
+    elif text == "👤 Profil":
+        await show_profile(update, context)
+
 
     elif text == "👑 Admin" and user_id == ADMIN_ID:
         await update.message.reply_text("👑 Admin panel:", reply_markup=admin_menu())
 
+
     elif text == "📊 Statistika" and user_id == ADMIN_ID:
+
         scores = load_scores()
-        await update.message.reply_text(f"Foydalanuvchilar soni: {len(scores)}")
+
+        user_count = len(scores)
+
+        total_score = sum(user["score"] for user in scores.values())
+
+        await update.message.reply_text(
+            f"📊 Bot statistikasi\n\n"
+            f"👥 Foydalanuvchilar: {user_count}\n"
+            f"🏆 Jami ishlangan ball: {total_score}"
+        )
+
 
     elif text == "📢 Broadcast" and user_id == ADMIN_ID:
+
         context.user_data["broadcast"] = True
+
         await update.message.reply_text("Xabarni yuboring:")
 
+
     elif context.user_data.get("broadcast") and user_id == ADMIN_ID:
+
         scores = load_scores()
+
         for uid in scores.keys():
+
             try:
                 await context.bot.send_message(chat_id=int(uid), text=text)
+
             except:
                 pass
+
         context.user_data["broadcast"] = False
+
         await update.message.reply_text("Xabar yuborildi.")
+
 
     elif text == "🔙 Orqaga":
         await start(update, context)
@@ -346,15 +434,24 @@ async def handle_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================= KEEP ALIVE =================
 
 class Handler(BaseHTTPRequestHandler):
+
     def do_GET(self):
+
         self.send_response(200)
+
         self.end_headers()
+
         self.wfile.write(b"Bot is running")
 
+
 def run_web():
+
     port = int(os.environ.get("PORT", 10000))
+
     server = HTTPServer(("0.0.0.0", port), Handler)
+
     server.serve_forever()
+
 
 threading.Thread(target=run_web).start()
 
@@ -368,4 +465,5 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu))
 app.add_handler(CallbackQueryHandler(handle_answer, pattern="^ans_"))
 
 print("Bot ishga tushdi 🚀")
+
 app.run_polling(close_loop=False)
