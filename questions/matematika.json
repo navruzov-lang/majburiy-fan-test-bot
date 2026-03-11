@@ -1,102 +1,202 @@
 [
-  {
-    "savol": "Agar 3x = 18 bo‘lsa, x ni toping.",
-    "variantlar": ["5", "6", "7", "8"],
-    "javob": 1
-  },
-  {
-    "savol": "2² + 3² = ?",
-    "variantlar": ["10", "12", "13", "14"],
-    "javob": 2
-  },
-  {
-    "savol": "0,5 kasr ko‘rinishida?",
-    "variantlar": ["1/2", "1/5", "2/5", "1/4"],
-    "javob": 0
-  },
-  {
-    "savol": "Agar 10 − x = 4 bo‘lsa, x = ?",
-    "variantlar": ["4", "5", "6", "7"],
-    "javob": 2
-  },
-  {
-    "savol": "Kvadratning tomoni 5 sm. Perimetri?",
-    "variantlar": ["10", "15", "20", "25"],
-    "javob": 2
-  },
-  {
-    "savol": "√49 = ?",
-    "variantlar": ["6", "7", "8", "9"],
-    "javob": 1
-  },
-  {
-    "savol": "3/5 + 2/5 = ?",
-    "variantlar": ["1", "5/5", "4/5", "3/5"],
-    "javob": 0
-  },
-  {
-    "savol": "2³ = ?",
-    "variantlar": ["6", "8", "9", "12"],
-    "javob": 1
-  },
-  {
-    "savol": "Agar 4x = 32 bo‘lsa, x = ?",
-    "variantlar": ["6", "7", "8", "9"],
-    "javob": 2
-  },
-  {
-    "savol": "To‘g‘ri to‘rtburchakning tomonlari 3 va 7. Yuzasi?",
-    "variantlar": ["10", "20", "21", "24"],
-    "javob": 2
-  },
-  {
-    "savol": "0,25 kasr ko‘rinishida?",
-    "variantlar": ["1/2", "1/4", "2/5", "1/5"],
-    "javob": 1
-  },
-  {
-    "savol": "Agar x + 6 = 15 bo‘lsa, x = ?",
-    "variantlar": ["8", "9", "10", "7"],
-    "javob": 1
-  },
-  {
-    "savol": "6² = ?",
-    "variantlar": ["30", "36", "42", "48"],
-    "javob": 1
-  },
-  {
-    "savol": "1/4 + 1/4 = ?",
-    "variantlar": ["1/2", "1/4", "2/4", "3/4"],
-    "javob": 0
-  },
-  {
-    "savol": "Agar 5x = 20 bo‘lsa, x = ?",
-    "variantlar": ["3", "4", "5", "6"],
-    "javob": 1
-  },
-  {
-    "savol": "To‘g‘ri to‘rtburchakning tomonlari 5 va 4. Perimetri?",
-    "variantlar": ["9", "18", "20", "16"],
-    "javob": 1
-  },
-  {
-    "savol": "√64 = ?",
-    "variantlar": ["6", "7", "8", "9"],
-    "javob": 2
-  },
-  {
-    "savol": "2 × 7 − 4 = ?",
-    "variantlar": ["8", "9", "10", "12"],
-    "javob": 2
-  },
-  {
-    "savol": "0,1 kasr ko‘rinishida?",
-    "variantlar": ["1/10", "1/5", "1/2", "2/5"],
-    "javob": 0
-  },
-  {
-    "savol": "7² = ?",
-    "variantlar": ["42", "49", "56", "63"],
-    "javob": 1
-  }
+{
+"savol":"7 × 8 = ?",
+"variantlar":["54","56","58","64"],
+"javob":1
+},
+{
+"savol":"9 × 6 = ?",
+"variantlar":["52","54","56","58"],
+"javob":1
+},
+{
+"savol":"36 ning kvadrat ildizi nechaga teng?",
+"variantlar":["5","6","7","8"],
+"javob":1
+},
+{
+"savol":"12 + 18 = ?",
+"variantlar":["28","30","32","34"],
+"javob":1
+},
+{
+"savol":"45 − 17 = ?",
+"variantlar":["26","27","28","29"],
+"javob":2
+},
+{
+"savol":"10² = ?",
+"variantlar":["10","20","100","200"],
+"javob":2
+},
+{
+"savol":"64 ning kvadrat ildizi nechaga teng?",
+"variantlar":["6","7","8","9"],
+"javob":2
+},
+{
+"savol":"5³ = ?",
+"variantlar":["25","75","100","125"],
+"javob":3
+},
+{
+"savol":"18 ÷ 3 = ?",
+"variantlar":["5","6","7","8"],
+"javob":1
+},
+{
+"savol":"14 × 4 = ?",
+"variantlar":["52","54","56","58"],
+"javob":2
+},
+{
+"savol":"120 ning 25% i nechaga teng?",
+"variantlar":["25","30","35","40"],
+"javob":1
+},
+{
+"savol":"200 ning 10% i nechaga teng?",
+"variantlar":["10","20","30","40"],
+"javob":1
+},
+{
+"savol":"x + 7 = 15 bo‘lsa x = ?",
+"variantlar":["6","7","8","9"],
+"javob":2
+},
+{
+"savol":"3x = 21 bo‘lsa x = ?",
+"variantlar":["5","6","7","8"],
+"javob":2
+},
+{
+"savol":"2² + 3² = ?",
+"variantlar":["10","12","13","14"],
+"javob":2
+},
+{
+"savol":"1 km necha metr?",
+"variantlar":["10","100","1000","10000"],
+"javob":2
+},
+{
+"savol":"1 soat necha minut?",
+"variantlar":["30","60","90","120"],
+"javob":1
+},
+{
+"savol":"15 × 5 = ?",
+"variantlar":["65","70","75","80"],
+"javob":2
+},
+{
+"savol":"81 ning kvadrat ildizi nechaga teng?",
+"variantlar":["7","8","9","10"],
+"javob":2
+},
+{
+"savol":"9² = ?",
+"variantlar":["72","81","90","99"],
+"javob":1
+},
+{
+"savol":"48 ÷ 6 = ?",
+"variantlar":["6","7","8","9"],
+"javob":2
+},
+{
+"savol":"11 × 11 = ?",
+"variantlar":["111","121","131","141"],
+"javob":1
+},
+{
+"savol":"144 ning kvadrat ildizi?",
+"variantlar":["10","11","12","13"],
+"javob":2
+},
+{
+"savol":"50 ning 20% i nechaga teng?",
+"variantlar":["5","8","10","12"],
+"javob":2
+},
+{
+"savol":"7² = ?",
+"variantlar":["42","47","49","56"],
+"javob":2
+},
+{
+"savol":"6³ = ?",
+"variantlar":["36","108","216","18"],
+"javob":2
+},
+{
+"savol":"30 + 45 = ?",
+"variantlar":["65","70","75","80"],
+"javob":2
+},
+{
+"savol":"90 − 37 = ?",
+"variantlar":["51","52","53","54"],
+"javob":2
+},
+{
+"savol":"16 × 3 = ?",
+"variantlar":["46","48","50","52"],
+"javob":1
+},
+{
+"savol":"72 ÷ 8 = ?",
+"variantlar":["7","8","9","10"],
+"javob":2
+},
+{
+"savol":"25² = ?",
+"variantlar":["525","625","725","825"],
+"javob":1
+},
+{
+"savol":"100 ning 5% i nechaga teng?",
+"variantlar":["5","10","15","20"],
+"javob":0
+},
+{
+"savol":"x − 4 = 10 bo‘lsa x = ?",
+"variantlar":["12","13","14","15"],
+"javob":2
+},
+{
+"savol":"5x = 40 bo‘lsa x = ?",
+"variantlar":["6","7","8","9"],
+"javob":2
+},
+{
+"savol":"3² + 4² = ?",
+"variantlar":["20","25","30","35"],
+"javob":1
+},
+{
+"savol":"1 m necha sm?",
+"variantlar":["10","100","1000","10000"],
+"javob":1
+},
+{
+"savol":"2 soat necha minut?",
+"variantlar":["60","90","120","180"],
+"javob":2
+},
+{
+"savol":"17 × 3 = ?",
+"variantlar":["49","50","51","52"],
+"javob":2
+},
+{
+"savol":"100 − 28 = ?",
+"variantlar":["70","71","72","73"],
+"javob":2
+},
+{
+"savol":"9 × 9 = ?",
+"variantlar":["72","81","90","99"],
+"javob":1
+}
 ]
