@@ -1,117 +1,154 @@
 [
-  {
-    "savol": "'Kitob' so‘zi qaysi turkum?",
-    "variantlar": ["Fe’l", "Ot", "Sifat", "Ravish"],
-    "javob": 1
-  },
-  {
-    "savol": "'Chiroyli' so‘zi qaysi turkum?",
-    "variantlar": ["Olmosh", "Sifat", "Ot", "Fe’l"],
-    "javob": 1
-  },
-  {
-    "savol": "Qaysi gapda ravish mavjud?",
-    "variantlar": [
-      "U tez yugurdi.",
-      "U maktabga bordi.",
-      "U kitob o‘qidi.",
-      "U yaxshi bola."
-    ],
-    "javob": 0
-  },
-  {
-    "savol": "'O‘qituvchi bolalarni maqtadi' gapida to‘ldiruvchi qaysi?",
-    "variantlar": ["O‘qituvchi", "bolalarni", "maqtadi", "yo‘q"],
-    "javob": 1
-  },
-  {
-    "savol": "Qaysi qatorda fe’l berilgan?",
-    "variantlar": ["tez", "bor", "keldi", "yashil"],
-    "javob": 2
-  },
-  {
-    "savol": "Qaysi qatorda sifat bor?",
-    "variantlar": ["yugurdi", "katta", "kitob", "tez"],
-    "javob": 1
-  },
-  {
-    "savol": "'Men maktabga bordim' gapida ega qaysi?",
-    "variantlar": ["Men", "maktabga", "bordim", "yo‘q"],
-    "javob": 0
-  },
-  {
-    "savol": "Qaysi qatorda ot bor?",
-    "variantlar": ["uy", "tez", "bordi", "yashil"],
-    "javob": 0
-  },
-  {
-    "savol": "Qaysi gap so‘roq gap?",
-    "variantlar": [
-      "Sen qayerga ketding?",
-      "U maktabga bordi.",
-      "Bugun havo issiq.",
-      "Men kitob o‘qidim."
-    ],
-    "javob": 0
-  },
-  {
-    "savol": "'Yaxshi bola' birikmasida 'yaxshi' qaysi turkum?",
-    "variantlar": ["Ot", "Fe’l", "Sifat", "Ravish"],
-    "javob": 2
-  },
-  {
-    "savol": "Qaysi qatorda olmosh bor?",
-    "variantlar": ["men", "uy", "katta", "bordi"],
-    "javob": 0
-  },
-  {
-    "savol": "'Tez yugurdi' birikmasida 'tez' qaysi turkum?",
-    "variantlar": ["Sifat", "Ravish", "Ot", "Fe’l"],
-    "javob": 1
-  },
-  {
-    "savol": "Qaysi qatorda bog‘lovchi bor?",
-    "variantlar": ["va", "uy", "bordi", "tez"],
-    "javob": 0
-  },
-  {
-    "savol": "Qaysi qatorda son bor?",
-    "variantlar": ["uch", "tez", "katta", "uy"],
-    "javob": 0
-  },
-  {
-    "savol": "Qaysi gap undov gap?",
-    "variantlar": [
-      "Voy, qanday chiroyli!",
-      "Sen qayerga ketding?",
-      "U maktabga bordi.",
-      "Men kitob o‘qidim."
-    ],
-    "javob": 0
-  },
-  {
-    "savol": "'Biz kitob o‘qidik' gapida kesim qaysi?",
-    "variantlar": ["Biz", "kitob", "o‘qidik", "yo‘q"],
-    "javob": 2
-  },
-  {
-    "savol": "Qaysi qatorda ravish bor?",
-    "variantlar": ["sekin", "uy", "katta", "kitob"],
-    "javob": 0
-  },
-  {
-    "savol": "Qaysi qatorda fe’l zamoni o‘tgan?",
-    "variantlar": ["bordi", "boradi", "boradi", "bor"],
-    "javob": 0
-  },
-  {
-    "savol": "'U juda chiroyli yozadi' gapida 'juda' qaysi turkum?",
-    "variantlar": ["Ravish", "Ot", "Fe’l", "Sifat"],
-    "javob": 0
-  },
-  {
-    "savol": "Qaysi qatorda ko‘plik qo‘shimchasi bor?",
-    "variantlar": ["kitoblar", "kitob", "yugurdi", "tez"],
-    "javob": 0
-  }
+{
+"savol":"Qaysi qatorda ot berilgan?",
+"variantlar":["uy","yashil","tez","yurdi"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda sifat bor?",
+"variantlar":["kitob","chiroyli","tez","yurdi"],
+"javob":1
+},
+{
+"savol":"Qaysi qatorda fe’l bor?",
+"variantlar":["yurdi","uy","katta","tez"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda ravish bor?",
+"variantlar":["tez","katta","kitob","bola"],
+"javob":0
+},
+{
+"savol":"'Men' so‘zi qaysi so‘z turkumiga kiradi?",
+"variantlar":["olmosh","ot","sifat","ravish"],
+"javob":0
+},
+{
+"savol":"'Kitob' so‘zi qaysi turkumga kiradi?",
+"variantlar":["ot","sifat","fe‘l","ravish"],
+"javob":0
+},
+{
+"savol":"'Chiroyli' so‘zi qaysi turkumga kiradi?",
+"variantlar":["ot","sifat","fe‘l","ravish"],
+"javob":1
+},
+{
+"savol":"'Yugurdi' so‘zi qaysi turkum?",
+"variantlar":["ot","fe‘l","sifat","ravish"],
+"javob":1
+},
+{
+"savol":"Qaysi qatorda olmosh bor?",
+"variantlar":["men","kitob","katta","tez"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda fe‘l bor?",
+"variantlar":["o‘qidi","kitob","uy","yashil"],
+"javob":0
+},
+
+{
+"savol":"'Biz maktabga bordik' gapida ega qaysi?",
+"variantlar":["biz","maktabga","bordik","yo‘q"],
+"javob":0
+},
+{
+"savol":"'U kitob o‘qidi' gapida kesim qaysi?",
+"variantlar":["u","kitob","o‘qidi","yo‘q"],
+"javob":2
+},
+{
+"savol":"Qaysi qatorda sinonim so‘zlar bor?",
+"variantlar":["katta–ulkan","tez–sekin","uy–daraxt","kitob–daftar"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda antonim so‘zlar bor?",
+"variantlar":["katta–kichik","uy–maktab","tez–tez","bola–qiz"],
+"javob":0
+},
+{
+"savol":"'Ona' so‘zining ko‘plik shakli?",
+"variantlar":["onalar","onalik","ona","onasi"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda otlar bor?",
+"variantlar":["kitob, daftar","katta, chiroyli","tez, sekin","yurdi, o‘qidi"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda sifatlar bor?",
+"variantlar":["katta, chiroyli","kitob, daftar","yugurdi, o‘qidi","tez, sekin"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda fe’llar bor?",
+"variantlar":["o‘qidi, yugurdi","katta, kichik","tez, sekin","kitob, daftar"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda ravish bor?",
+"variantlar":["tez","katta","kitob","bola"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda olmosh bor?",
+"variantlar":["men","katta","kitob","tez"],
+"javob":0
+},
+
+{
+"savol":"'Bolalar bog‘ga bordi' gapida ega?",
+"variantlar":["bolalar","bog‘ga","bordi","yo‘q"],
+"javob":0
+},
+{
+"savol":"'U kitob o‘qiyapti' gapida kesim?",
+"variantlar":["u","kitob","o‘qiyapti","yo‘q"],
+"javob":2
+},
+{
+"savol":"Qaysi qatorda ravish bor?",
+"variantlar":["sekin","kitob","katta","bola"],
+"javob":0
+},
+{
+"savol":"Qaysi qatorda sifat bor?",
+"variantlar":["katta","kitob","yugurdi","tez"],
+"javob":0
+},
+{
+"savol":"'Yurdi' so‘zi qaysi turkum?",
+"variantlar":["fe‘l","ot","sifat","ravish"],
+"javob":0
+},
+{
+"savol":"'Tez' so‘zi qaysi turkum?",
+"variantlar":["ravish","ot","fe‘l","sifat"],
+"javob":0
+},
+{
+"savol":"'Kitoblar' so‘zi qaysi turkum?",
+"variantlar":["ot","sifat","fe‘l","ravish"],
+"javob":0
+},
+{
+"savol":"'Biz' so‘zi qaysi turkum?",
+"variantlar":["olmosh","ot","sifat","ravish"],
+"javob":0
+},
+{
+"savol":"'Yashil' so‘zi qaysi turkum?",
+"variantlar":["sifat","ot","fe‘l","ravish"],
+"javob":0
+},
+{
+"savol":"'Keldi' so‘zi qaysi turkum?",
+"variantlar":["fe‘l","ot","sifat","ravish"],
+"javob":0
+}
 ]
